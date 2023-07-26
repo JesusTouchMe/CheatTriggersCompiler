@@ -1,4 +1,8 @@
+#include "other.cts"
+
+#define balls 2+5
+
 fun main() {
-    println(2+2)
-    println(2+5)
+    println(true)
+    println(balls)
 }

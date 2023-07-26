@@ -8,14 +8,13 @@ import cum.jesus.cheattriggers.compiler.parsing.ast.AstNodeType
 import cum.jesus.cheattriggers.compiler.parsing.ast.expression.*
 import cum.jesus.cheattriggers.compiler.parsing.ast.statement.*
 import cum.jesus.cheattriggers.compiler.parsing.ast.statement.Function
+import cum.jesus.cheattriggers.compiler.std
 import cum.jesus.cheattriggers.compiler.symbol.FunSymbol
 import cum.jesus.cheattriggers.compiler.symbol.VarSymbol
 import java.text.ParseException
-import java.util.WeakHashMap
-import java.util.function.BiFunction
-import kotlin.math.exp
 
 class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
+    val globalScope = currentScope
     private var pos = 0
 
     fun parse(): ArrayList<AstNode> {
@@ -27,35 +26,37 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
             val expr = parseExpr()
             if (current().tokenType == TokenType.SEMICOLON) consume()
 
-            if (expr.nodeType == AstNodeType.FUNCTION || expr.nodeType == AstNodeType.VARIABLE_DECLARATION)
+            if (expr.nodeType == AstNodeType.FUNCTION)
                 nodes.add(expr)
         }
 
         return nodes
     }
 
-    private fun current() = tokens[pos]
+    private inline fun current() = tokens[pos]
 
-    private fun consume() = tokens[pos++]
+    private inline fun consume() = tokens[pos++]
 
-    private fun peek(offset: Int) = tokens[pos + offset]
+    private inline fun peek(offset: Int) = tokens[pos + offset]
 
     private fun getBinOpPrecedence(tokenType: TokenType) = when (tokenType) {
         TokenType.LEFT_SQUARE_BRACKET, TokenType.LEFT_PAREN -> 55
 
         TokenType.DOT -> 50
 
-        TokenType.STAR, TokenType.SLASH -> 45
-        TokenType.PLUS, TokenType.MINUS -> 40
+        TokenType.CARET -> 45
+        TokenType.STAR, TokenType.SLASH -> 40
+        TokenType.PLUS, TokenType.MINUS -> 35
 
-        TokenType.LEFT_ANGLE_BRACKET, TokenType.RIGHT_ANGLE_BRACKET -> 35
+        TokenType.LEFT_ANGLE_BRACKET, TokenType.RIGHT_ANGLE_BRACKET -> 30
 
-        TokenType.DOUBLE_EQUALS, TokenType.BANG_EQUALS -> 30
+        TokenType.DOUBLE_EQUALS, TokenType.BANG_EQUALS -> 25
 
-        TokenType.DOUBLE_AMPERSAND -> 25
-        TokenType.DOUBLE_PIPE -> 20
+        TokenType.DOUBLE_AMPERSAND -> 20
+        TokenType.DOUBLE_PIPE -> 15
+        TokenType.DOUBLE_CARET -> 10
 
-        TokenType.EQUALS, TokenType.PLUS_EQUALS, TokenType.MINUS_EQUALS, TokenType.STAR_EQUALS, TokenType.SLASH_EQUALS -> 15
+        TokenType.EQUALS, TokenType.PLUS_EQUALS, TokenType.MINUS_EQUALS, TokenType.STAR_EQUALS, TokenType.SLASH_EQUALS, TokenType.CARET_EQUALS -> 5
 
         else -> 0
     }
@@ -107,7 +108,7 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
     }
 
     private fun parsePrimary() = when (current().tokenType) {
-        TokenType.LET -> parseVariableDeclaration()
+        TokenType.VAR -> parseVariableDeclaration()
         TokenType.FUN -> parseFunctionDeclaration()
         TokenType.INTEGER, TokenType.FLOAT -> parseNumberLiteral()
         TokenType.IDENTIFIER -> parseVariable()
@@ -126,7 +127,7 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
         expect(TokenType.IDENTIFIER)
         val name = current().text
 
-        currentScope.varSymbols.add(VarSymbol(name))
+        currentScope.addSymbol(VarSymbol(name))
 
         if (current().tokenType != TokenType.EQUALS)
             return VariableDeclaration(name, null)
@@ -149,21 +150,22 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
         val name = current().text
         consume()
 
-        currentScope.funSymbols.add(FunSymbol(name))
+        currentScope.addSymbol(FunSymbol(name))
 
         val args = arrayListOf<String>()
         if (current().tokenType != TokenType.LEFT_PAREN) throw ParseException("Expected '(' after function declaration", pos)
         consume()
 
-        val scope = Scope(currentScope)
+        var scope = Scope(currentScope)
         currentScope = scope
 
         while (current().tokenType != TokenType.RIGHT_PAREN) {
             expect(TokenType.IDENTIFIER)
             val name = current().text
+            consume()
 
             args.add(name)
-            currentScope.varSymbols.add(VarSymbol(name))
+            currentScope.addSymbol(VarSymbol(name))
             if (current().tokenType == TokenType.RIGHT_PAREN) break;
 
             expect(TokenType.COMMA)
@@ -172,6 +174,9 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
         consume()
 
         val body = parseExpr()
+
+        if (body !is Compound) throw ParseException("Function body has to be a compound", pos)
+        scope = body.scope
 
         currentScope = currentScope.parent!!
         return Function(name, scope, body, args)
@@ -188,6 +193,8 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
             consume()
         }
         consume()
+
+        if (callee is Variable && callee.name in std) globalScope.addStdSymbol(FunSymbol(callee.name))
 
         return FunctionCall(callee, args)
     }

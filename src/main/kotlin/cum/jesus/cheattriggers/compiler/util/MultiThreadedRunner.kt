@@ -9,8 +9,7 @@ object MultiThreadedRunner {
 
     fun addTask(task: () -> Unit) {
         if (threadPool == null) return
-        val task = Task(task)
-        threadPool!!.submit(task)
+        threadPool!!.submit(Task(task))
     }
 
     fun shutdown() {

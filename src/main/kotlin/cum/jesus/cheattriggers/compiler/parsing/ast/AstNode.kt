@@ -16,6 +16,10 @@ enum class AstNodeType {
     CALL,
 }
 
+interface IPrimitive {
+    val value: Any;
+}
+
 open class AstNode(val nodeType: AstNodeType) {
-    
+
 }

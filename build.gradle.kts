@@ -4,8 +4,8 @@ plugins {
     kotlin("jvm") version "1.7.21"
 }
 
-group = "org.example"
-version = "1.0-SNAPSHOT"
+group = "cum.jesus.cheattriggers.compiler"
+version = "1"
 
 repositories {
     mavenCentral()

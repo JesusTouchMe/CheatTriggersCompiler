@@ -2,6 +2,9 @@ package cum.jesus.cheattriggers.compiler
 
 import cum.jesus.cheattriggers.compiler.lexing.Lexer
 import cum.jesus.cheattriggers.compiler.parsing.Parser
+import cum.jesus.cheattriggers.compiler.parsing.ast.AstNodeType
+import cum.jesus.cheattriggers.compiler.parsing.ast.statement.Compound
+import cum.jesus.cheattriggers.compiler.parsing.ast.statement.Function
 import cum.jesus.cheattriggers.compiler.preprocessor.Preprocessor
 import cum.jesus.cheattriggers.compiler.util.MultiThreadedRunner
 import joptsimple.NonOptionArgumentSpec
@@ -14,6 +17,10 @@ import java.nio.file.Files
 
 // TODO: preprocessor
 
+val std = arrayOf(
+    "print",
+    "println"
+)
 fun main(args: Array<String>) {
     val mode = args[0]
 
@@ -74,37 +81,38 @@ object CompilerTasks {
         val filesToCompile = arrayListOf<File>()
 
         // preprocessing
-        MultiThreadedRunner.new(options.valueOf("threads") as Int)
-
         for (file in options.valuesOf(files)) {
             val processedFile = File(tmpDir, "${filesToCompile.size}.cts")
+            if (processedFile.exists()) processedFile.delete()
+            processedFile.createNewFile()
             filesToCompile.add(processedFile)
-            MultiThreadedRunner.addTask {
-                Preprocessor.process(file, processedFile)
-            }
+            val pp = Preprocessor(file, processedFile)
+            pp.process()
         }
-
-        MultiThreadedRunner.destroy()
 
         // combining out files
         val combinedFiles = File(tmpDir, "a.cts")
-        if (!combinedFiles.exists()) combinedFiles.createNewFile()
+        if (combinedFiles.exists()) {
+            combinedFiles.delete()
+        }
+
+        combinedFiles.createNewFile()
 
         val fileWriter = FileWriter(combinedFiles, true)
         val outputWriter = BufferedWriter(fileWriter)
 
         for (file in filesToCompile) {
-            val content = String(Files.readAllBytes(file.toPath()))
+            val content = file.readText()
             outputWriter.write(content)
             outputWriter.newLine()
 
-            file.delete()
+            //file.delete()
         }
 
         outputWriter.close()
 
         // lex
-        val lexer = Lexer(String(Files.readAllBytes(combinedFiles.toPath())))
+        val lexer = Lexer(combinedFiles.readText())
         val tokens = lexer.lex()
 
         // generate ast
@@ -112,15 +120,17 @@ object CompilerTasks {
         val parser = Parser(tokens, globalScope)
         val ast = parser.parse()
 
-        println(ast)
-
         // compile
-        val compiler = Compiler(ast, options.valueOf("output") as File, globalScope)
+        val output = options.valueOf("output") as File
+        if (output.exists()) output.delete()
+        output.createNewFile()
+
+        val compiler = Compiler(ast, output, globalScope)
         compiler.compile()
 
         // cleanup
         combinedFiles.delete()
-        if (tmpDir.listFiles()!!.isNotEmpty()) tmpDir.listFiles()!!.forEach { it.delete() }
-        tmpDir.delete()
+        //if (tmpDir.listFiles() != null) if (tmpDir.listFiles()?.isNotEmpty() == true) tmpDir.listFiles()?.forEach { it.delete() }
+        //tmpDir.delete()
     }
 }

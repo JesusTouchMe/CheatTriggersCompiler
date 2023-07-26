@@ -19,6 +19,7 @@ enum class TokenType {
 
     BANG, BANG_EQUALS,
 
+    CARET, DOUBLE_CARET, CARET_EQUALS,
     AMPERSAND, DOUBLE_AMPERSAND,
     PIPE, DOUBLE_PIPE,
 
@@ -34,7 +35,7 @@ enum class TokenType {
     WHILE, FOR,
     BREAK,
 
-    LET,
+    VAR,
 
     FUN,
 }
@@ -45,11 +46,13 @@ val keywords = mapOf(
     "while" to TokenType.WHILE,
     "for" to TokenType.FOR,
     "fun" to TokenType.FUN,
-    "let" to TokenType.LET,
+    "var" to TokenType.VAR,
     "break" to TokenType.BREAK,
 )
 
-data class Token(val tokenType: TokenType, val text: String = "") {
+data class Token(val tokenType: TokenType, val text: String = "", val startPos: Int = -1, val endPos: Int = -1) {
+    fun indices() = startPos..endPos
+
     override fun toString(): String {
         return if (text != "") "$tokenType:$text" else "$tokenType"
     }

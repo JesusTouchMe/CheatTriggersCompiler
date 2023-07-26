@@ -6,13 +6,6 @@ import cum.jesus.cheattriggers.compiler.parsing.ast.AstNodeType
 
 data class Compound(val statements: ArrayList<AstNode>, val scope: Scope) : AstNode(AstNodeType.COMPOUND) {
     override fun toString(): String {
-        var res = "({"
-        for (statement in statements) {
-            res += "\n"
-            res += statement.toString()
-        }
-        res += "\n})"
-
-        return res
+        return "($statements)"
     }
 }

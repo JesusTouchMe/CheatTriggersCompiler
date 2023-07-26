@@ -1,7 +1,7 @@
 package cum.jesus.cheattriggers.compiler.lexing
 
 const val NUMBERS = "0123456789"
-const val LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const val LETTERS = "abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ"
 const val LETTERS_NUMBERS = LETTERS + NUMBERS
 
 class Lexer(private val text: String) {
@@ -24,14 +24,15 @@ class Lexer(private val text: String) {
         return tokens
     }
 
-    private fun current() = text[pos]
+    private inline fun current() = text[pos]
 
-    private fun consume() = text[pos++]
+    private inline fun consume() = text[pos++]
 
-    private fun peek(offset: Int) = text[pos+offset]
+    private inline fun peek(offset: Int) = text[pos+offset]
 
     private fun nextToken(): Token? {
         if (current() in LETTERS + "_") { // keyword/identifier
+            val start = pos
             var value = current().toString()
 
             while (peek(1) in LETTERS_NUMBERS + "_") {
@@ -42,7 +43,7 @@ class Lexer(private val text: String) {
             if (keywords.containsKey(value))
                 return Token(keywords[value]!!)
 
-            return Token(TokenType.IDENTIFIER, value)
+            return Token(TokenType.IDENTIFIER, value, start, pos)
         }
 
         if (current() in NUMBERS) {
@@ -159,6 +160,18 @@ class Lexer(private val text: String) {
                 }
 
                 return Token(TokenType.BANG)
+            }
+
+            '^' -> {
+                if (peek(1) == '^') {
+                    consume()
+                    return Token(TokenType.DOUBLE_CARET)
+                } else if (peek(1) == '=') {
+                    consume()
+                    return Token(TokenType.CARET_EQUALS)
+                }
+
+                return Token(TokenType.CARET)
             }
 
             '&' -> {
