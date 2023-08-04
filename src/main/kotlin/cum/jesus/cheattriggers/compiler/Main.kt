@@ -2,18 +2,14 @@ package cum.jesus.cheattriggers.compiler
 
 import cum.jesus.cheattriggers.compiler.lexing.Lexer
 import cum.jesus.cheattriggers.compiler.parsing.Parser
-import cum.jesus.cheattriggers.compiler.parsing.ast.AstNodeType
-import cum.jesus.cheattriggers.compiler.parsing.ast.statement.Compound
-import cum.jesus.cheattriggers.compiler.parsing.ast.statement.Function
 import cum.jesus.cheattriggers.compiler.preprocessor.Preprocessor
-import cum.jesus.cheattriggers.compiler.util.MultiThreadedRunner
+import cum.jesus.cheattriggers.compiler.util.Diagnostics
 import joptsimple.NonOptionArgumentSpec
 import joptsimple.OptionParser
 import joptsimple.OptionSet
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
-import java.nio.file.Files
 
 // TODO: preprocessor
 
@@ -63,6 +59,8 @@ fun main(args: Array<String>) {
         "preprocess" -> CompilerTasks.preprocess()
 
         "compile" -> CompilerTasks.compile()
+
+        "disasm" -> CompilerTasks.disasm()
     }
 }
 
@@ -91,7 +89,7 @@ object CompilerTasks {
         }
 
         // combining out files
-        val combinedFiles = File(tmpDir, "a.cts")
+        val combinedFiles = File(tmpDir, "a.cts") // TODO: make a more "sophisticated" way of linking multiple files
         if (combinedFiles.exists()) {
             combinedFiles.delete()
         }
@@ -106,7 +104,7 @@ object CompilerTasks {
             outputWriter.write(content)
             outputWriter.newLine()
 
-            //file.delete()
+            file.delete()
         }
 
         outputWriter.close()
@@ -128,9 +126,18 @@ object CompilerTasks {
         val compiler = Compiler(ast, output, globalScope)
         compiler.compile()
 
+        println("Compilation succeeded with ${Diagnostics.warnings.size} warnings and ${Diagnostics.errors.size} errors")
+
         // cleanup
         combinedFiles.delete()
-        //if (tmpDir.listFiles() != null) if (tmpDir.listFiles()?.isNotEmpty() == true) tmpDir.listFiles()?.forEach { it.delete() }
-        //tmpDir.delete()
+        if (tmpDir.listFiles() != null) if (tmpDir.listFiles()?.isNotEmpty() == true) tmpDir.listFiles()?.forEach { it.delete() }
+        tmpDir.delete()
+    }
+
+    fun disasm() {
+        for (file in options.valuesOf(files)) {
+            val bytecode = Disassembler(file).disassemble()
+            println("Disassembled bytecode for ${file.name}:\n$bytecode\n")
+        }
     }
 }

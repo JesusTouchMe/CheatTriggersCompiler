@@ -1,11 +1,14 @@
 package cum.jesus.cheattriggers.compiler.lexing
 
+import cum.jesus.cheattriggers.compiler.util.Diagnostics
+
 const val NUMBERS = "0123456789"
 const val LETTERS = "abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ"
 const val LETTERS_NUMBERS = LETTERS + NUMBERS
 
 class Lexer(private val text: String) {
     private var pos = 0;
+    private var line = 0
 
     fun lex(): ArrayList<Token> {
         val tokens = arrayListOf<Token>()
@@ -67,7 +70,11 @@ class Lexer(private val text: String) {
         }
 
         return when (current()) {
-            '\n', '\r', ' ' -> null
+            '\n' -> {
+                line++
+                null
+            }
+            '\r', ' ' -> null
 
             '(' -> Token(TokenType.LEFT_PAREN)
             ')' -> Token(TokenType.RIGHT_PAREN)
@@ -198,7 +205,10 @@ class Lexer(private val text: String) {
             ':' -> Token(TokenType.COLON)
             ';' -> Token(TokenType.SEMICOLON)
 
-            else -> Token(TokenType.UNKNOWN)
+            else -> {
+                Diagnostics.error(Diagnostics.LexerError("Unknown symbol: ${current()}", line))
+                Token(TokenType.UNKNOWN)
+            }
         }
     }
 }

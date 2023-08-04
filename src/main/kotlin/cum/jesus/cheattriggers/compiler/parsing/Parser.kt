@@ -117,6 +117,8 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
         TokenType.IF -> parseIf()
         TokenType.FOR -> parseFor()
         TokenType.WHILE -> parseWhile()
+        TokenType.BREAK -> TODO("break")
+        TokenType.NULL -> TODO("null")
 
         else -> throw ParseException("Expected primary expression but got ${current()}", pos)
     }

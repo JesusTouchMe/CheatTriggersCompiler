@@ -84,9 +84,16 @@ const val BINARY_XOR: UByte = 0x18u
 
 // Opcodes with no specific category
 /**
- * Goes to the next instruction
+ * Goes to the instruction after the next instruction
  *
- * This instruction will likely not be used often if at all, and is only there so that the logic exists for custom compilers
+ * Example:
+ * GOTO
+ *
+ * LOAD_CONST 0 ; skipped
+ *
+ * LOAD_CONST 1 ; will be this instruction after GOTO
+ *
+ * This instruction will likely not be used often if at all, and is only there so that the logic exists for custom compilers or directly written bytecode
  */
 const val GOTO: UByte = 0x1Eu
 
@@ -96,7 +103,7 @@ const val GOTO: UByte = 0x1Eu
  * Args (1):
  *  - pos: The position in the instruction set to goto
  *
- *  This instruction will likely not be used often if at all, and is only there so that the logic exists for custom compilers
+ *  This instruction will likely not be used often if at all, and is only there so that the logic exists for custom compilers or directly written bytecode
  */
 const val GOTO_1: UByte = 0x1Fu
 
@@ -220,7 +227,7 @@ const val DELETE_NAME: UByte = 0x2Eu
 const val LOAD_CONST: UByte = 0x2Fu
 
 /**
- * Sets up a loop block on the block stack. The block will span from the current instruction with a size of 'delta' bytes
+ * Sets up a loop block on the block stack. The block will span from the next instruction with a size of 'delta' bytes
  *
  * Args (1):
  *  - delta: The size of the loop block
@@ -228,7 +235,7 @@ const val LOAD_CONST: UByte = 0x2Fu
 const val SETUP_LOOP: UByte = 0x30u
 
 /**
- * Call a function. The argument 'argc' is the amount of arguments the function has. The arguments will be found first on the stack. The right-most argument will be the one at the top of the stack. The function will be below the arguments on the stack. Pops all the arguments but not the function
+ * Call a function. The argument 'argc' is the amount of arguments the function has. The arguments will be found first on the stack. The right-most argument will be the one at the top of the stack. The function will be below the arguments on the stack. Pops the function and ann arguments and leaves the returned value on the stack (will automatically be popped if it's null)
  *
  * Args (1):
  *  - argc: The amount of arguments to search for on the stack
@@ -236,6 +243,54 @@ const val SETUP_LOOP: UByte = 0x30u
 const val CALL_FUNCTION: UByte = 0x31u
 
 /**
+ * Will compare VALUE and VALUE1 using 'cmp_op'
+ *
+ * Args (1):
+ *  -cmp_op The "code" for the comparison (to prevent using many bytes for comparing)
+ */
+const val COMPARE: UByte = 0x032u
+
+/**
  * Exits the program using VALUE as the exit code
  */
-const val EXIT: UByte = 0x32u
+const val EXIT: UByte = 0x33u
+
+// opcode: (name, arg amount in bytes (so a 2 byte single arg will still be 2))
+val opcodeMap = mapOf<UByte, Pair<String, Int>>(
+    NUL to ("NUL" to 0),
+    POP to ("POP" to 0),
+    UNARY_POSITIVE to ("UNARY_POSITIVE" to 0),
+    UNARY_NEGATIVE to ("UNARY_NEGATIVE" to 0),
+    UNARY_NOT to ("UNARY_NOT" to 0),
+    BINARY_POW to ("BINARY_POW" to 0),
+    BINARY_MUL to ("BINARY_MUL" to 0),
+    BINARY_DIV to ("BINARY_DIV" to 0),
+    BINARY_MOD to ("BINARY_MOD" to 0),
+    BINARY_ADD to ("BINARY_ADD" to 0),
+    BINARY_SUB to ("BINARY_SUB" to 0),
+    BINARY_AND to ("BINARY_AND" to 0),
+    BINARY_OR to ("BINARY_OR" to 0),
+    BINARY_XOR to ("BINARY_XOR" to 0),
+    GOTO to ("GOTO" to 0),
+    GOTO_1 to ("GOTO_1" to 1),
+    JUMP to ("JUMP" to 1),
+    JUMP_IF_TRUE to ("JUMP_IF_TRUE" to 1),
+    JUMP_IF_FALSE to ("JUMP_IF_FALSE" to 1),
+    BREAK_LOOP to ("BREAK_LOOP" to 0),
+    RETURN_VALUE to ("RETURN_VALUE" to 0),
+    POP_BLOCK to ("POP_BLOCK" to 0),
+    STORE_GLOBAL to ("STORE_GLOBAL" to 1),
+    LOAD_GLOBAL to ("LOAD_GLOBAL" to 1),
+    DELETE_GLOBAL to ("DELETE_GLOBAL" to 1),
+    STORE_FAST to ("STORE_FAST" to 1),
+    LOAD_FAST to ("LOAD_FAST" to 1),
+    DELETE_FAST to ("DELETE_FAST" to 1),
+    STORE_NAME to ("STORE_NAME" to 1),
+    LOAD_NAME to ("LOAD_NAME" to 1),
+    DELETE_NAME to ("DELETE_NAME" to 1),
+    LOAD_CONST to ("LOAD_CONST" to 1),
+    SETUP_LOOP to ("SETUP_LOOP" to 1),
+    CALL_FUNCTION to ("CALL_FUNCTION" to 1),
+    COMPARE to ("COMPARE" to 1),
+    EXIT to ("EXIT" to 0)
+)

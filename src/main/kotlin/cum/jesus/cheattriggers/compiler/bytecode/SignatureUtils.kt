@@ -3,9 +3,12 @@ package cum.jesus.cheattriggers.compiler.bytecode
 import cum.jesus.cheattriggers.compiler.Scope
 import cum.jesus.cheattriggers.compiler.parsing.ast.AstNode
 import cum.jesus.cheattriggers.compiler.parsing.ast.IPrimitive
-import cum.jesus.cheattriggers.compiler.parsing.ast.expression.*
+import cum.jesus.cheattriggers.compiler.parsing.ast.expression.BinaryExpression
+import cum.jesus.cheattriggers.compiler.parsing.ast.expression.FunctionCall
+import cum.jesus.cheattriggers.compiler.parsing.ast.expression.UnaryExpression
 import cum.jesus.cheattriggers.compiler.parsing.ast.statement.*
 import cum.jesus.cheattriggers.compiler.parsing.ast.statement.Function
+import cum.jesus.cheattriggers.compiler.util.addAllBytes
 
 /**
  * Utility class for generating signatures
@@ -19,10 +22,10 @@ object SignatureUtils {
 
     const val STD_AMOUNT: UByte = 0x06u
 
-    const val FUNCTION_SIGNATURE: UByte = 0x06u
-    const val PROGRAM: UByte = 0x07u
+    const val FUNCTION_SIGNATURE: UByte = 0x07u
+    const val ENTRY: UByte = 0x08u
 
-    const val BYTECODE: UByte = 0x08u
+    const val BYTECODE: UByte = 0x09u
 
     val globalTable = LinkedHashMap<String, Int>()
     private var i = 0
@@ -35,16 +38,16 @@ object SignatureUtils {
 
         if (globalScope.stdSymbols > 0) {
             bytes.add(STD_AMOUNT)
-            bytes.addAll(globalScope.stdSymbols.toString().toByteArray())
+            bytes.addAllBytes(globalScope.stdSymbols.toString().toByteArray())
             bytes.add(NUL)
         }
 
         bytes.add(GLOBAL_TABLE)
         for (symbol in globalScope.orderedSymbols) {
-            bytes.addAll(symbol.name.toByteArray())
+            bytes.addAllBytes(symbol.name.toByteArray())
             bytes.add(NUL)
 
-            globalTable.put(symbol.name, i)
+            globalTable[symbol.name] = i
             i++
         }
 
@@ -59,6 +62,8 @@ object SignatureUtils {
     }
 
     fun makeFunctionSignature(func: Function): Pair<FunctionSignature, ByteArray> {
+        val entry = func.name == "_start"
+
         val bytes = ArrayList<UByte>()
         var fastIndex = 0
         val fastTable = LinkedHashMap<String, Int>()
@@ -67,8 +72,8 @@ object SignatureUtils {
         var constIndex = 0
         val constTable = LinkedHashMap<String, Int>()
 
-        bytes.add(FUNCTION_SIGNATURE)
-        bytes.addAll(func.name.toByteArray())
+        bytes.add(if (entry) ENTRY else FUNCTION_SIGNATURE)
+        bytes.addAllBytes(func.name.toByteArray())
         bytes.add(NUL)
 
         // fast table
@@ -77,7 +82,7 @@ object SignatureUtils {
             for (arg in func.args) {
                 fastTable[arg] = fastIndex
                 fastIndex++
-                bytes.addAll(arg.toByteArray())
+                bytes.addAllBytes(arg.toByteArray())
                 bytes.add(NUL)
             }
 
@@ -86,12 +91,12 @@ object SignatureUtils {
         }
 
         // name table
-        if (func.scope.orderedSymbols.isNotEmpty()) {
+        if (func.scope.varSymbols.isNotEmpty()) {
             bytes.add(NAME_TABLE)
             for (symbol in func.scope.varSymbols) {
                 nameTable[symbol.name] = nameIndex
                 nameIndex++
-                bytes.addAll(symbol.name.toByteArray())
+                bytes.addAllBytes(symbol.name.toByteArray())
                 bytes.add(NUL)
             }
 
@@ -101,9 +106,16 @@ object SignatureUtils {
 
         // const table
         bytes.add(CONST_TABLE)
+
         constTable["null"] = constIndex
         constIndex++
-        bytes.addAll("null".toByteArray())
+        bytes.addAllBytes("null".toByteArray())
+
+        if (entry) { // the compiler will need to make sure 0 is in the const table to add the exit code in the end
+            constTable["0"] = constIndex
+            constIndex++
+            bytes.addAllBytes("0".toByteArray())
+        }
 
         if (containsPrimitive(func)) {
             bytes.add(NUL)
@@ -118,7 +130,7 @@ object SignatureUtils {
                         primitiveValues.add(node.value)
                         constTable[node.toString()] = constIndex
                         constIndex++
-                        bytes.addAll(node.value.toString().toByteArray())
+                        bytes.addAllBytes(node.toString().toByteArray())
                         bytes.add(NUL)
                         return true
                     }
@@ -219,11 +231,10 @@ object SignatureUtils {
 }
 
 data class FunctionSignature(val fastTable: LinkedHashMap<String, Int> = LinkedHashMap(), val nameTable: LinkedHashMap<String, Int> = LinkedHashMap(), val constTable: LinkedHashMap<String, Int> = LinkedHashMap()) {
-    var statements: ArrayList<AstNode>? = null
-        get() = if (field == null) ArrayList() else field
+    var statements: ArrayList<AstNode> = ArrayList()
 
     fun setStatements(new: ArrayList<AstNode>) = apply {
-        statements = new
+        statements.addAll(new)
     }
 
     /**
@@ -244,11 +255,5 @@ data class FunctionSignature(val fastTable: LinkedHashMap<String, Int> = LinkedH
             else -> null
         }
 
-    }
-}
-
-fun ArrayList<UByte>.addAll(elements: ByteArray) {
-    for (byte in elements) {
-        this.add(byte.toUByte())
     }
 }

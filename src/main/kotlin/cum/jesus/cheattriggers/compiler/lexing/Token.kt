@@ -31,6 +31,8 @@ enum class TokenType {
     DOT, COMMA,
     COLON, SEMICOLON,
 
+    NULL,
+
     IF, ELSE,
     WHILE, FOR,
     BREAK,
@@ -48,6 +50,7 @@ val keywords = mapOf(
     "fun" to TokenType.FUN,
     "var" to TokenType.VAR,
     "break" to TokenType.BREAK,
+    "null" to TokenType.NULL,
 )
 
 data class Token(val tokenType: TokenType, val text: String = "", val startPos: Int = -1, val endPos: Int = -1) {

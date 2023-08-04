@@ -3,7 +3,6 @@ package cum.jesus.cheattriggers.compiler
 import cum.jesus.cheattriggers.compiler.symbol.FunSymbol
 import cum.jesus.cheattriggers.compiler.symbol.Symbol
 import cum.jesus.cheattriggers.compiler.symbol.VarSymbol
-import java.util.NoSuchElementException
 
 class Scope(val parent: Scope?) {
     val varSymbols = arrayListOf<VarSymbol>()
@@ -63,6 +62,51 @@ class Scope(val parent: Scope?) {
                 env = env.parent!!
             else
                 throw NoSuchElementException("Unknown symbol: $name")
+        }
+    }
+
+    fun hasSymbol(name: String): Boolean {
+        var env = this
+        while (true) {
+            val symbols = env.orderedSymbols
+            val res = symbols.find { it.name == name }
+
+            if (res != null)
+                return true
+            else if (env.parent != null)
+                env = env.parent!!
+            else
+                return false
+        }
+    }
+
+    fun hasVarSymbol(name: String): Boolean {
+        var env = this
+        while (true) {
+            val symbols = env.varSymbols
+            val res = symbols.find { it.name == name }
+
+            if (res != null)
+                return true
+            else if (env.parent != null)
+                env = env.parent!!
+            else
+                return false
+        }
+    }
+
+    fun hasFunSymbol(name: String): Boolean {
+        var env = this
+        while (true) {
+            val symbols = env.funSymbols
+            val res = symbols.find { it.name == name }
+
+            if (res != null)
+                return true
+            else if (env.parent != null)
+                env = env.parent!!
+            else
+                return false
         }
     }
 

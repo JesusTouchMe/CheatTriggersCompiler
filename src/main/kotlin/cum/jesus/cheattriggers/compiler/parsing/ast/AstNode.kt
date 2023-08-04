@@ -1,7 +1,11 @@
 package cum.jesus.cheattriggers.compiler.parsing.ast
 
 enum class AstNodeType {
+    LONG,
     INTEGER,
+    SHORT,
+    BYTE,
+    DOUBLE,
     FLOAT,
 
     BINARY_EXPRESSION,
