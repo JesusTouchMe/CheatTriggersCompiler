@@ -1,6 +1,7 @@
 package cum.jesus.cheattriggers.compiler
 
 import cum.jesus.cheattriggers.compiler.bytecode.*
+import cum.jesus.cheattriggers.compiler.util.Diagnostics
 import java.io.File
 
 /**
@@ -20,9 +21,9 @@ class Disassembler(private val file: File) {
     @OptIn(ExperimentalUnsignedTypes::class)
     fun disassemble(): String {
         val fileVersion = text.lines()[0]
-        if (fileVersion !in supportedBytecodeVersions) println("WARNING: Bytecode version $fileVersion used in ${file.name} is not supported by this disassembler, however it will still try")
+        if (fileVersion !in supportedBytecodeVersions) Diagnostics.warn("Bytecode version $fileVersion used in ${file.name} is not supported by this disassembler, however it will still try")
 
-        pos += text.lines()[0].length + 2
+        pos += fileVersion.length + 2
 
         var string = ""
         while (pos < bytes.size) {
@@ -86,7 +87,7 @@ class Disassembler(private val file: File) {
 
             string += "\n"
 
-            if (peek(1) == NUL && peek(2) == NUL) break
+            if (peek(1) == NUL && peek(2) == NUL && peek(3) == SignatureUtils.BYTECODE) break
 
             consume()
         }

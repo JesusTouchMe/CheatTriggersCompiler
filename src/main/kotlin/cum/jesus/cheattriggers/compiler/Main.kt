@@ -141,3 +141,20 @@ object CompilerTasks {
         }
     }
 }
+
+/*
+"maybe" boolean type
+
+bool test = maybe
+
+thread {
+    int importantStatusCode = processDataThatTakesALongAssTime()
+    test = importantStatusCode == 69
+}
+
+doSomeStuffWhileWaiting()
+
+if (test) {
+    finishImportantCodeForNuclearMissiles()
+}
+ */

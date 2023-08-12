@@ -39,7 +39,7 @@ enum class TokenType {
 
     VAR,
 
-    FUN,
+    FUN, BYTECODE
 }
 
 val keywords = mapOf(
@@ -48,6 +48,7 @@ val keywords = mapOf(
     "while" to TokenType.WHILE,
     "for" to TokenType.FOR,
     "fun" to TokenType.FUN,
+    "bytecode" to TokenType.BYTECODE,
     "var" to TokenType.VAR,
     "break" to TokenType.BREAK,
     "null" to TokenType.NULL,

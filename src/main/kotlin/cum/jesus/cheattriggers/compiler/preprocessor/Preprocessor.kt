@@ -296,7 +296,7 @@ class Preprocessor(private val file: File, private val outputFile: File) {
                 }
             }
 
-            "else", "end" -> throw error("Unreachable")
+            "else", "end" -> error("Unreachable")
 
             else -> Diagnostics.error(PreprocessorError("'#$macroName' is not a valid macro", lineNumber))
         }
@@ -308,8 +308,9 @@ class Preprocessor(private val file: File, private val outputFile: File) {
 
         init {
             standardDefinitions["true"] = "1"
-            standardDefinitions["false"] = "0"
-            standardDefinitions["_BYTECODE_VERSION"] = BYTECODE_VERSION
+            standardDefinitions["false"] = "-1"
+            standardDefinitions["maybe"] = "0"
+            standardDefinitions["__BYTECODE_VERSION"] = BYTECODE_VERSION
 
             definitions.putAll(standardDefinitions)
         }

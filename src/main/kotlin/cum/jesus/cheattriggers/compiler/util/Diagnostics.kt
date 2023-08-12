@@ -1,5 +1,6 @@
 package cum.jesus.cheattriggers.compiler.util
 
+import cum.jesus.cheattriggers.compiler.lexing.Token
 import cum.jesus.cheattriggers.compiler.parsing.ast.AstNode
 import kotlin.system.exitProcess
 
@@ -33,7 +34,7 @@ object Diagnostics {
             }
 
             is ParserError -> {
-                println("${if (fatal) "FATAL " else ""}PARSING ERROR: ${err.message}\nCaused by: ${err.cause}\nNote that this is a node and might not represent your actual code")
+                println("${if (fatal) "FATAL " else ""}PARSING ERROR: ${err.message}\nCaused by: ${err.cause}\nNote that this is a token and might not represent your actual code")
             }
 
             is CompilerError -> {
@@ -72,6 +73,6 @@ object Diagnostics {
     }
     class PreprocessorError(val message: String, val line: Int) : Error(message, 2)
     class LexerError(val message: String, val line: Int) : Error(message, 3)
-    class ParserError(val message: String, val cause: AstNode) : Error(message, 4)
+    class ParserError(val message: String, val cause: Token) : Error(message, 4)
     class CompilerError(val message: String) : Error(message, 5)
 }

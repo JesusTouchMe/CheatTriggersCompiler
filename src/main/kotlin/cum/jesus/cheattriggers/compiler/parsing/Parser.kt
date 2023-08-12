@@ -11,7 +11,8 @@ import cum.jesus.cheattriggers.compiler.parsing.ast.statement.Function
 import cum.jesus.cheattriggers.compiler.std
 import cum.jesus.cheattriggers.compiler.symbol.FunSymbol
 import cum.jesus.cheattriggers.compiler.symbol.VarSymbol
-import java.text.ParseException
+import cum.jesus.cheattriggers.compiler.util.Diagnostics
+import kotlin.math.exp
 
 class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
     val globalScope = currentScope
@@ -24,7 +25,8 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
             if (current().tokenType == TokenType.EOF) break
 
             val expr = parseExpr()
-            if (current().tokenType == TokenType.SEMICOLON) consume()
+            expect(TokenType.SEMICOLON)
+            consume()
 
             if (expr.nodeType == AstNodeType.FUNCTION)
                 nodes.add(expr)
@@ -33,11 +35,11 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
         return nodes
     }
 
-    private inline fun current() = tokens[pos]
+    private fun current() = tokens[pos]
 
-    private inline fun consume() = tokens[pos++]
+    private fun consume() = tokens[pos++]
 
-    private inline fun peek(offset: Int) = tokens[pos + offset]
+    private fun peek(offset: Int) = tokens[pos + offset]
 
     private fun getBinOpPrecedence(tokenType: TokenType) = when (tokenType) {
         TokenType.LEFT_SQUARE_BRACKET, TokenType.LEFT_PAREN -> 55
@@ -68,9 +70,8 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
     }
 
     private fun expect(tokenType: TokenType) {
-        if (current().tokenType != tokenType) {
-            throw ParseException("Expected $tokenType, but got ${current()}", pos)
-        }
+        if (current().tokenType != tokenType)
+            Diagnostics.error(Diagnostics.ParserError("Expected $tokenType, but got ${current()}", current()), true)
     }
 
     private fun parseExpr(precedence: Int = 1): AstNode {
@@ -110,6 +111,7 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
     private fun parsePrimary() = when (current().tokenType) {
         TokenType.VAR -> parseVariableDeclaration()
         TokenType.FUN -> parseFunctionDeclaration()
+        TokenType.BYTECODE -> TODO("in-file bytecode")
         TokenType.INTEGER, TokenType.FLOAT -> parseNumberLiteral()
         TokenType.IDENTIFIER -> parseVariable()
         TokenType.LEFT_PAREN -> parseParenExpr()
@@ -120,7 +122,14 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
         TokenType.BREAK -> TODO("break")
         TokenType.NULL -> TODO("null")
 
-        else -> throw ParseException("Expected primary expression but got ${current()}", pos)
+        else -> {
+            Diagnostics.error(
+                Diagnostics.ParserError("Expected primary expression but got ${current()}", current()),
+                true
+            )
+
+            error("unreachabel")
+        }
     }
 
     private fun parseVariableDeclaration(): AstNode {
@@ -155,7 +164,7 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
         currentScope.addSymbol(FunSymbol(name))
 
         val args = arrayListOf<String>()
-        if (current().tokenType != TokenType.LEFT_PAREN) throw ParseException("Expected '(' after function declaration", pos)
+        expect(TokenType.LEFT_PAREN)
         consume()
 
         var scope = Scope(currentScope)
@@ -163,11 +172,11 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
 
         while (current().tokenType != TokenType.RIGHT_PAREN) {
             expect(TokenType.IDENTIFIER)
-            val name = current().text
+            val arg = current().text
             consume()
 
-            args.add(name)
-            currentScope.addSymbol(VarSymbol(name))
+            args.add(arg)
+            currentScope.addSymbol(VarSymbol(arg))
             if (current().tokenType == TokenType.RIGHT_PAREN) break;
 
             expect(TokenType.COMMA)
@@ -177,8 +186,8 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
 
         val body = parseExpr()
 
-        if (body !is Compound) throw ParseException("Function body has to be a compound", pos)
-        scope = body.scope
+        if (body !is Compound) Diagnostics.error(Diagnostics.ParserError("Function body has to be a compound", current()), true)
+        scope = (body as Compound).scope
 
         currentScope = currentScope.parent!!
         return Function(name, scope, body, args)
@@ -239,8 +248,12 @@ class Parser(private val tokens: ArrayList<Token>, var currentScope: Scope) {
 
         while (current().tokenType != TokenType.RIGHT_BRACKET) {
             exprs.add(parseExpr())
+            expect(TokenType.SEMICOLON)
+            consume()
         }
         consume()
+
+        tokens.add(pos, Token(TokenType.SEMICOLON))
 
         currentScope = currentScope.parent!!
         return Compound(exprs, scope)

@@ -226,7 +226,7 @@ class ByteCodeGenerator(private val sig: FunctionSignature, private val optimise
     private fun visitForStatement(node: ForStatement): ArrayList<UByte> {
         val bytes = ArrayList<UByte>()
 
-        println("WARNING: For loops are not yet implemented and will not generate any bytecode")
+        Diagnostics.warn("For loops are not yet implemented and will not generate any bytecode")
 
         return bytes
     }
