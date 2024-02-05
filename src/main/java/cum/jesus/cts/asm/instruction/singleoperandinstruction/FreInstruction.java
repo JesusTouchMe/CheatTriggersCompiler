@@ -6,16 +6,16 @@ import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.SingleOperandInstruction;
 import cum.jesus.cts.asm.instruction.operand.Register;
 
-public final class PopInstruction extends SingleOperandInstruction {
-    public PopInstruction(Operand dest) {
-        super(dest);
+public final class FreInstruction extends SingleOperandInstruction {
+    public FreInstruction(Operand source) {
+        super(source);
     }
 
     @Override
     public void emit(OpcodeBuilder builder) {
         if (operand instanceof Register) {
             builder.createInstruction()
-                    .opcode(Opcodes.POP)
+                    .opcode(Opcodes.FRE)
                     .operand(0, ((Register) operand).getId())
                     .emit();
         }

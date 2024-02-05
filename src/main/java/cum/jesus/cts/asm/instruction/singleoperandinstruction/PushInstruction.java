@@ -9,8 +9,8 @@ import cum.jesus.cts.asm.instruction.operand.Register;
 import cum.jesus.cts.asm.instruction.operand.StringOperand;
 
 public final class PushInstruction extends SingleOperandInstruction {
-    public PushInstruction(Operand operand) {
-        super(operand);
+    public PushInstruction(Operand source) {
+        super(source);
     }
 
     @Override
