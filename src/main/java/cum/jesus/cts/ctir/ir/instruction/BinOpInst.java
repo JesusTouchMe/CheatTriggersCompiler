@@ -1,9 +1,11 @@
 package cum.jesus.cts.ctir.ir.instruction;
 
+import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Value;
 
 import java.io.PrintStream;
+import java.util.List;
 
 public final class BinOpInst extends Instruction {
     private int left;
@@ -44,6 +46,11 @@ public final class BinOpInst extends Instruction {
     @Override
     public String ident() {
         return "%" + name;
+    }
+
+    @Override
+    public void emit(List<AsmValue> values) {
+
     }
 
     public enum Operator {

@@ -1,10 +1,12 @@
 package cum.jesus.cts.ctir.ir.instruction;
 
+import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Value;
 import cum.jesus.cts.type.PointerType;
 
 import java.io.PrintStream;
+import java.util.List;
 
 public final class StoreInst extends Instruction {
     private int ptr;
@@ -33,5 +35,10 @@ public final class StoreInst extends Instruction {
     @Override
     public String ident() {
         return "%undef";
+    }
+
+    @Override
+    public void emit(List<AsmValue> values) {
+
     }
 }

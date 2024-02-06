@@ -1,9 +1,11 @@
 package cum.jesus.cts.ctir.ir;
 
+import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.ctir.Module;
 import cum.jesus.cts.type.Type;
 
 import java.io.PrintStream;
+import java.util.List;
 
 public final class Argument extends Value {
     private String name;
@@ -28,5 +30,10 @@ public final class Argument extends Value {
     @Override
     public String ident() {
         return String.format("%s %%%s", type.getName(), name);
+    }
+
+    @Override
+    public void emit(List<AsmValue> values) {
+
     }
 }

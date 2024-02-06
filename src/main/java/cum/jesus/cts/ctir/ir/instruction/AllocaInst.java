@@ -1,10 +1,12 @@
 package cum.jesus.cts.ctir.ir.instruction;
 
+import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.type.PointerType;
 import cum.jesus.cts.type.Type;
 
 import java.io.PrintStream;
+import java.util.List;
 
 public final class AllocaInst extends Instruction {
     private String name;
@@ -36,5 +38,10 @@ public final class AllocaInst extends Instruction {
     @Override
     public String ident() {
         return String.format("%s %%%s", type.getName(), name);
+    }
+
+    @Override
+    public void emit(List<AsmValue> values) {
+
     }
 }

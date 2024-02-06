@@ -1,5 +1,6 @@
 package cum.jesus.cts.ctir.ir.instruction;
 
+import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Function;
 import cum.jesus.cts.ctir.ir.Value;
@@ -55,5 +56,10 @@ public final class CallInst extends Instruction {
     @Override
     public String ident() {
         return String.format("%s %%%s", type.getName(), name);
+    }
+
+    @Override
+    public void emit(List<AsmValue> values) {
+
     }
 }

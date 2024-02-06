@@ -1,5 +1,6 @@
 package cum.jesus.cts.ctir.ir;
 
+import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.ctir.OptimizationLevel;
 
 import java.io.PrintStream;
@@ -76,6 +77,11 @@ public final class Block extends Value {
     @Override
     public String ident() {
         return "label " + name;
+    }
+
+    @Override
+    public void emit(List<AsmValue> values) {
+
     }
 
     public void optimize(OptimizationLevel level) {

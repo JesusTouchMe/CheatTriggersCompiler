@@ -1,9 +1,11 @@
 package cum.jesus.cts.ctir.ir.constant;
 
+import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.type.Type;
 
 import java.io.PrintStream;
+import java.util.List;
 
 public final class ConstantInt extends Constant {
     private long value;
@@ -35,5 +37,10 @@ public final class ConstantInt extends Constant {
     @Override
     public String ident() {
         return String.format("%s %%%s", type.getName(), name);
+    }
+
+    @Override
+    public void emit(List<AsmValue> values) {
+
     }
 }
