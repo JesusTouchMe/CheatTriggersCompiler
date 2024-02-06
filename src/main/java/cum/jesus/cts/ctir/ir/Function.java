@@ -1,13 +1,19 @@
 package cum.jesus.cts.ctir.ir;
 
 import cum.jesus.cts.asm.instruction.AsmValue;
+import cum.jesus.cts.asm.instruction.Operand;
+import cum.jesus.cts.asm.instruction.fakes.FunctionInstructionFake;
+import cum.jesus.cts.asm.instruction.operand.Register;
+import cum.jesus.cts.asm.instruction.singleoperandinstruction.PushInstruction;
 import cum.jesus.cts.ctir.Module;
 import cum.jesus.cts.ctir.OptimizationLevel;
+import cum.jesus.cts.ctir.ir.instruction.AllocaInst;
 import cum.jesus.cts.type.FunctionType;
 import cum.jesus.cts.type.Type;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -128,7 +134,16 @@ public final class Function extends Value {
 
     @Override
     public void emit(List<AsmValue> values) {
+        if (blocks.isEmpty()) {
+            return;
+        }
 
+        sortAllocas();
+
+        values.add(new FunctionInstructionFake(name));
+
+        values.add(new PushInstruction(new Register(Register.regStackBase)));
+        //TODO: mov regSB, regST
     }
 
     public void optimize(OptimizationLevel level) {
@@ -136,4 +151,36 @@ public final class Function extends Value {
             return;
         }
     }
+
+    @Override
+    public Operand getEmittedValue() {
+        return emittedValue.clone();
+    }
+
+    private void sortAllocas() {
+        List<AllocaInst> temp = new ArrayList<>();
+
+        for (Block block : blocks) {
+            for (int instruction : block.getInstructions()) {
+                if (values.get(instruction) instanceof AllocaInst) {
+                    temp.add((AllocaInst) values.get(instruction));
+                }
+            }
+        }
+
+        temp.sort(Comparator.comparingInt(lhs -> lhs.getAllocatedType().getSize()));
+
+        int offset = 0;
+        for (AllocaInst alloca : temp) {
+            offset += 1; // an alloca is 1 value aka 1 size
+            alloca.setStackOffset(allocaSignature, offset);
+        }
+
+        totalStackOffset = offset;
+    }
+
+    public static final class AllocaSignature {
+        private AllocaSignature() {}
+    }
+    private static final AllocaSignature allocaSignature = new AllocaSignature();
 }

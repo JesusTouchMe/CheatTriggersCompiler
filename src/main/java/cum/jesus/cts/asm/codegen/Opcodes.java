@@ -70,6 +70,7 @@ public enum Opcodes {
     PPOP(0x85, 1),
     PMEMI(0x86, 5),
     PMEM(0x87, 4),
+    CENT(0x88, 3),
 
     ;
 

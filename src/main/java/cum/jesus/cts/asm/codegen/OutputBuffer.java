@@ -4,16 +4,23 @@ import cum.jesus.cts.util.ByteBuffer;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class OutputBuffer {
     private final ByteBuffer buf;
     private final Map<String, Integer> symbols;
 
+    private final List<FunctionSymbol> functionSymbols;
+    private final List<ConstPoolEntry> constantPool;
+
     public OutputBuffer() {
         buf = new ByteBuffer();
         symbols = new HashMap<>();
+        functionSymbols = new ArrayList<>();
+        constantPool = new ArrayList<>();
     }
 
     public void writeb(byte b) {
@@ -69,6 +76,21 @@ public final class OutputBuffer {
         symbols.put(name, value);
     }
 
+    /**
+     * Function symbol for the vm but yeah
+     */
+    public void addGlobalSymbol(final String name, int value) {
+        functionSymbols.add(new FunctionSymbol(name, value));
+    }
+
+    public void declareNewFunction(final String name) {
+        functionSymbols.add(new FunctionSymbol(name, getPosition()));
+    }
+
+    public void addConstant(ConstPoolEntry entry) {
+        constantPool.add(entry);
+    }
+
     public int getSymbol(final String name) {
         return symbols.getOrDefault(name, -1);
     }
@@ -110,6 +132,21 @@ public final class OutputBuffer {
     }
 
     public void emit(OutputStream stream) throws IOException {
+        stream.write(new byte[] {'v', '1', 0, 'F', ' '});
+        for (FunctionSymbol function : functionSymbols) {
+            function.writeTo(stream);
+        }
+        stream.write(0);
+        stream.write(0);
+
+        for (ConstPoolEntry entry : constantPool) {
+            entry.writeTo(stream);
+        }
+        stream.write(0);
+        stream.write(0);
+
+        stream.write(new byte[] { 'C', 'o', 'd', 'e' });
+
         buf.writeTo(stream);
     }
 }

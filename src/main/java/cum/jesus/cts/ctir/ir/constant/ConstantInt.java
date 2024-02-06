@@ -8,8 +8,8 @@ import java.io.PrintStream;
 import java.util.List;
 
 public final class ConstantInt extends Constant {
-    private long value;
-    private String name;
+    private final long value;
+    private final String name;
 
     public ConstantInt(Block parent, int id, long value, Type type, String name) {
         super(parent.getParent().getModule(), id);

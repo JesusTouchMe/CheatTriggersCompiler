@@ -1,5 +1,6 @@
 package cum.jesus.cts.util;
 
+import cum.jesus.cts.asm.Types;
 import cum.jesus.cts.asm.codegen.Opcodes;
 import cum.jesus.cts.asm.codegen.OutputBuffer;
 import cum.jesus.cts.util.exceptions.UnreachableStatementException;
@@ -10,54 +11,48 @@ public final class ImmediateVariant {
     private int i;
     private long l;
 
-    /**
-     * 1 = byte
-     * 2 = short
-     * 3 = int
-     * 4 = long
-     */
-    private final byte type;
+    private final Types type;
 
     public ImmediateVariant(byte b) {
         this.b = b;
-        this.type = 1;
+        this.type = Types.BYTE;
     }
 
     public ImmediateVariant(short s) {
         this.s = s;
-        this.type = 2;
+        this.type = Types.SHORT;
     }
 
     public ImmediateVariant(int i) {
         this.i = i;
-        this.type = 3;
+        this.type = Types.INT;
     }
 
     public ImmediateVariant(long l) {
         this.l = l;
-        this.type = 4;
+        this.type = Types.LONG;
     }
 
     public void writeToOutput(OutputBuffer output) {
         switch (type) {
-            case 1:
+            case BYTE:
                 output.writeb(Opcodes.IMM8.getOpcode());
-                output.writeb((byte) 0x01); // byte type
+                output.writeb(type.toByte()); // byte type
                 output.writeb(b);
                 break;
-            case 2:
+            case SHORT:
                 output.writeb(Opcodes.IMM16.getOpcode());
-                output.writeb((byte) 0x02); // short type
+                output.writeb(type.toByte()); // short type
                 output.writes(s);
                 break;
-            case 3:
+            case INT:
                 output.writeb(Opcodes.IMM32.getOpcode());
-                output.writeb((byte) 0x03); // int type
+                output.writeb(type.toByte()); // int type
                 output.writei(i);
                 break;
-            case 4:
+            case LONG:
                 output.writeb(Opcodes.IMM64.getOpcode());
-                output.writeb((byte) 0x04); // long type
+                output.writeb(type.toByte()); // long type
                 output.writel(l);
                 break;
 

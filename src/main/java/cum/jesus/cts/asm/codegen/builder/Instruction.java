@@ -97,7 +97,8 @@ public final class Instruction {
             output.writeb(Opcodes.IMMS.getOpcode());
             output.writes((short) string.get().length());
             byte[] bytes = string.get().getBytes();
-            for (int i = 0; i < Math.min(0xFFFF, bytes.length); i++) {
+            int length = Math.min(0xFFFF, bytes.length);
+            for (int i = 0; i < length; i++) {
                 output.write(bytes[i]);
             }
         } else if (stackMemory.isPresent()) {

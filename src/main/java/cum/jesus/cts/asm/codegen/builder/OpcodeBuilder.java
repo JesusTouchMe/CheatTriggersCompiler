@@ -1,7 +1,9 @@
 package cum.jesus.cts.asm.codegen.builder;
 
+import cum.jesus.cts.asm.codegen.ConstPoolEntry;
 import cum.jesus.cts.asm.codegen.OperandSize;
 import cum.jesus.cts.asm.codegen.OutputBuffer;
+import cum.jesus.cts.asm.instruction.Operand;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +29,18 @@ public final class OpcodeBuilder {
 
     public void addLabel(String name) {
         output.addSymbol(name, output.getPosition());
+    }
+
+    public void beginNewFunction(String name) {
+        output.declareNewFunction(name);
+    }
+
+    /**
+     *
+     * @param constant any operand that could be considered constant such as immediate and string
+     */
+    public void addNewConstant(Operand constant) {
+        output.addConstant(new ConstPoolEntry(constant));
     }
 
     public void forwardLabel(String name, OperandSize size, int offset) {
