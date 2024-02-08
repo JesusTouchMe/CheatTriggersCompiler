@@ -14,6 +14,11 @@ public final class StringOperand extends Operand {
     }
 
     @Override
+    public String ident() {
+        return '"' + text + '"';
+    }
+
+    @Override
     public Operand clone() {
         return new StringOperand(text);
     }

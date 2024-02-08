@@ -6,9 +6,16 @@ import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.SingleOperandInstruction;
 import cum.jesus.cts.asm.instruction.operand.Register;
 
+import java.io.PrintStream;
+
 public final class AlcInstruction extends SingleOperandInstruction {
     public AlcInstruction(Operand dest) {
         super(dest);
+    }
+
+    @Override
+    public void print(PrintStream stream) {
+        stream.println("    alc " + operand.ident());
     }
 
     @Override

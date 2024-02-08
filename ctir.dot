@@ -1,0 +1,21 @@
+
+
+strict graph {
+	N10 -- N9
+	N10 [color=red]
+	N9 -- N10
+	N9 [color=blue]
+	N4 [color=red]
+	N0 [color=yellow]
+}
+
+strict graph {
+	N5 [color=yellow]
+}
+
+strict graph {
+	N1 -- N0
+	N1 [color=purple]
+	N0 -- N1
+	N0 [color=yellow]
+}

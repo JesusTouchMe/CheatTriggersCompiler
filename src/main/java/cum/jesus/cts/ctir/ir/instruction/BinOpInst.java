@@ -1,10 +1,17 @@
 package cum.jesus.cts.ctir.ir.instruction;
 
 import cum.jesus.cts.asm.instruction.AsmValue;
+import cum.jesus.cts.asm.instruction.Operand;
+import cum.jesus.cts.asm.instruction.operand.Register;
+import cum.jesus.cts.asm.instruction.threeoperandinstruction.AddInstruction;
+import cum.jesus.cts.asm.instruction.threeoperandinstruction.DivInstruction;
+import cum.jesus.cts.asm.instruction.threeoperandinstruction.MulInstruction;
+import cum.jesus.cts.asm.instruction.threeoperandinstruction.SubInstruction;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Value;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.List;
 
 public final class BinOpInst extends Instruction {
@@ -35,7 +42,12 @@ public final class BinOpInst extends Instruction {
 
     @Override
     public boolean requiresRegister() {
-        return register != -1;
+        return color != -1;
+    }
+
+    @Override
+    public List<Integer> getOperands() {
+        return Arrays.asList(left, right);
     }
 
     @Override
@@ -50,7 +62,59 @@ public final class BinOpInst extends Instruction {
 
     @Override
     public void emit(List<AsmValue> values) {
+        switch (op) {
+            case ADD: {
+                Operand lhs = parent.getEmittedValue(left);
+                Operand rhs = parent.getEmittedValue(right);
 
+                if (color != -1) {
+                    values.add(new AddInstruction(Register.get(register), lhs, rhs));
+                    emittedValue = Register.get(register);
+                } else {
+                    values.add(new AddInstruction(lhs.clone(), lhs.clone(), rhs));
+                    emittedValue = lhs;
+                }
+            } break;
+
+            case SUB: {
+                Operand lhs = parent.getEmittedValue(left);
+                Operand rhs = parent.getEmittedValue(right);
+
+                if (color != -1) {
+                    values.add(new SubInstruction(Register.get(register), lhs, rhs));
+                    emittedValue = Register.get(register);
+                } else {
+                    values.add(new SubInstruction(lhs.clone(), lhs.clone(), rhs));
+                    emittedValue = lhs;
+                }
+            } break;
+
+            case MUL: {
+                Operand lhs = parent.getEmittedValue(left);
+                Operand rhs = parent.getEmittedValue(right);
+
+                if (color != -1) {
+                    values.add(new MulInstruction(Register.get(register), lhs, rhs));
+                    emittedValue = Register.get(register);
+                } else {
+                    values.add(new MulInstruction(lhs.clone(), lhs.clone(), rhs));
+                    emittedValue = lhs;
+                }
+            } break;
+
+            case DIV: {
+                Operand lhs = parent.getEmittedValue(left);
+                Operand rhs = parent.getEmittedValue(right);
+
+                if (color != -1) {
+                    values.add(new DivInstruction(Register.get(register), lhs, rhs));
+                    emittedValue = Register.get(register);
+                } else {
+                    values.add(new DivInstruction(lhs.clone(), lhs.clone(), rhs));
+                    emittedValue = lhs;
+                }
+            } break;
+        }
     }
 
     public enum Operator {

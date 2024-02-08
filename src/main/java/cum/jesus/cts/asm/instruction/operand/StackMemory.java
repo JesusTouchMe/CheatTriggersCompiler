@@ -17,6 +17,11 @@ public final class StackMemory extends Operand {
     }
 
     @Override
+    public String ident() {
+        return "[regSB+" + address + ']';
+    }
+
+    @Override
     public Operand clone() {
         return new StackMemory(address);
     }

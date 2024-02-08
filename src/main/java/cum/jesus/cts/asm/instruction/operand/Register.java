@@ -40,6 +40,14 @@ public final class Register extends Operand {
     }
 
     @Override
+    public String ident() {
+        if (id < 0) {
+            return "shrug";
+        }
+        return registerNames[id];
+    }
+
+    @Override
     public Operand clone() {
         return new Register(id);
     }

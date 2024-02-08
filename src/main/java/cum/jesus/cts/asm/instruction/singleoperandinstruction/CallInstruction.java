@@ -8,9 +8,16 @@ import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
 import cum.jesus.cts.asm.instruction.operand.Register;
 import cum.jesus.cts.asm.instruction.operand.StringOperand;
 
+import java.io.PrintStream;
+
 public final class CallInstruction extends SingleOperandInstruction {
     public CallInstruction(Operand source) {
         super(source);
+    }
+
+    @Override
+    public void print(PrintStream stream) {
+        stream.println("    call " + operand.ident());
     }
 
     @Override
@@ -28,7 +35,7 @@ public final class CallInstruction extends SingleOperandInstruction {
         } else if (operand instanceof ConstPoolEntryOperand) {
             builder.createInstruction()
                     .opcode(Opcodes.CENT)
-                    .immediate((short) (((ConstPoolEntryOperand) operand).getIndex()))
+                    .immediate(((ConstPoolEntryOperand) operand).getIndex())
                     .emit();
             builder.createInstruction()
                     .opcode(Opcodes.CALL)

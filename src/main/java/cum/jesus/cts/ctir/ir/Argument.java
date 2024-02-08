@@ -1,10 +1,12 @@
 package cum.jesus.cts.ctir.ir;
 
 import cum.jesus.cts.asm.instruction.AsmValue;
+import cum.jesus.cts.asm.instruction.operand.Register;
 import cum.jesus.cts.ctir.Module;
 import cum.jesus.cts.type.Type;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 
 public final class Argument extends Value {
@@ -23,6 +25,11 @@ public final class Argument extends Value {
     }
 
     @Override
+    public List<Integer> getOperands() {
+        return new ArrayList<>();
+    }
+
+    @Override
     public void print(PrintStream stream) {
 
     }
@@ -34,6 +41,6 @@ public final class Argument extends Value {
 
     @Override
     public void emit(List<AsmValue> values) {
-
+        emittedValue = Register.get(register);
     }
 }

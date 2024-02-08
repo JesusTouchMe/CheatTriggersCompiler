@@ -1,9 +1,15 @@
 package cum.jesus.cts.ctir;
 
+import cum.jesus.cts.asm.codegen.OutputBuffer;
+import cum.jesus.cts.asm.codegen.builder.OpcodeBuilder;
+import cum.jesus.cts.asm.instruction.AsmValue;
+import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.ctir.ir.Function;
 import cum.jesus.cts.ctir.ir.Value;
 import cum.jesus.cts.ctir.ir.instruction.LoadInst;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +17,8 @@ import java.util.List;
 public final class Module {
     private String name;
     private List<Function> functions;
+
+    public int constPoolOffset = 0;
 
     public Module(String name) {
         this.name = name;
@@ -29,11 +37,33 @@ public final class Module {
         functions.add(func);
     }
 
+    public Operand getFunctionEmittedValue(int id) {
+        return functions.get(id).getEmittedValue();
+    }
+
     public void print(PrintStream stream) {
         stream.printf("filename = \"%s\"", name);
         for (Function func : functions) {
             func.print(stream);
         }
+    }
+
+    public void emit(OutputStream stream) throws IOException {
+        List<AsmValue> values = new ArrayList<>();
+        for (Function function : functions) {
+            function.emit(values);
+        }
+
+        OutputBuffer output = new OutputBuffer();
+        OpcodeBuilder builder = new OpcodeBuilder(output);
+
+        for (AsmValue value : values) {
+            value.print(System.out);
+            value.emit(builder);
+        }
+
+        //builder.patchForwardLabels();
+        //output.emit(stream);
     }
 
     public void optimize(OptimizationLevel level) {

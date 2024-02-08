@@ -9,8 +9,13 @@ public final class ConstPoolEntryOperand extends Operand {
         this.index = index;
     }
 
-    public int getIndex() {
-        return index;
+    public short getIndex() {
+        return (short) index;
+    }
+
+    @Override
+    public String ident() {
+    return "#" + index;
     }
 
     @Override

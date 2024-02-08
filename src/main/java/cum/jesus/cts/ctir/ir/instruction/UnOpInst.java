@@ -1,10 +1,15 @@
 package cum.jesus.cts.ctir.ir.instruction;
 
 import cum.jesus.cts.asm.instruction.AsmValue;
+import cum.jesus.cts.asm.instruction.Operand;
+import cum.jesus.cts.asm.instruction.operand.Register;
+import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
+import cum.jesus.cts.asm.instruction.twooperandinstruction.NegInstruction;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Value;
 
 import java.io.PrintStream;
+import java.util.Collections;
 import java.util.List;
 
 public final class UnOpInst extends Instruction {
@@ -29,7 +34,12 @@ public final class UnOpInst extends Instruction {
 
     @Override
     public boolean requiresRegister() {
-        return register != -1;
+        return color != -1;
+    }
+
+    @Override
+    public List<Integer> getOperands() {
+        return Collections.singletonList(operand);
     }
 
     @Override
@@ -44,7 +54,27 @@ public final class UnOpInst extends Instruction {
 
     @Override
     public void emit(List<AsmValue> values) {
+        Operand operand = parent.getEmittedValue(this.operand);
 
+        switch (op) {
+            case POS:
+                if (color != -1) {
+                    values.add(new MovInstruction(Register.get(register), operand));
+                    emittedValue = Register.get(register);
+                } else {
+                    emittedValue = operand;
+                }
+                break;
+
+            case NEG:
+                if (color != -1) {
+                    values.add(new NegInstruction(Register.get(register), operand));
+                    emittedValue = Register.get(register);
+                } else {
+                    values.add(new NegInstruction(operand.clone(), operand.clone()));
+                    emittedValue = operand;
+                }
+        }
     }
 
     public enum Operator {

@@ -5,7 +5,7 @@ import java.util.Objects;
 public abstract class SingleOperandInstruction extends Instruction {
     protected Operand operand;
 
-    public SingleOperandInstruction(Operand operand) {
+    protected SingleOperandInstruction(Operand operand) {
         this.operand = Objects.requireNonNull(operand);
     }
 

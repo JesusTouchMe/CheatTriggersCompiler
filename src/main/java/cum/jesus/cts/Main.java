@@ -10,6 +10,7 @@ import cum.jesus.cts.parsing.ast.AbstractSyntaxTree;
 import cum.jesus.cts.type.Type;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
@@ -19,6 +20,11 @@ public class Main {
         File input = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Interpreter\\test.cts");
         if (!input.canRead()) {
             throw new IOException("Cannot read input file");
+        }
+
+        File graphout = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Interpreter\\ctir.dot");
+        if (graphout.exists()) {
+            graphout.delete();
         }
 
         Type.init();
@@ -37,5 +43,16 @@ public class Main {
 
         ast.emit(module, builder, globalScope);
         module.print(System.out);
+        System.out.println();
+
+        File output = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Interpreter\\test.ct");
+        if (!output.exists()) {
+            output.createNewFile();
+        }
+        if (!output.canWrite()) {
+            throw new IOException("Cannot write to output file");
+        }
+
+        module.emit(new FileOutputStream(output, false));
     }
 }

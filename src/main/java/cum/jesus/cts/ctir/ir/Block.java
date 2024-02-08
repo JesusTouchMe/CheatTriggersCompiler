@@ -1,6 +1,9 @@
 package cum.jesus.cts.ctir.ir;
 
 import cum.jesus.cts.asm.instruction.AsmValue;
+import cum.jesus.cts.asm.instruction.Label;
+import cum.jesus.cts.asm.instruction.Operand;
+import cum.jesus.cts.asm.instruction.operand.LabelOperand;
 import cum.jesus.cts.ctir.OptimizationLevel;
 
 import java.io.PrintStream;
@@ -44,6 +47,10 @@ public final class Block extends Value {
         return values;
     }
 
+    public Operand getEmittedValue(int id) {
+        return parent.getValue(id).getEmittedValue();
+    }
+
     public void insertValue(Value value) {
         values.add(value.id);
     }
@@ -65,6 +72,11 @@ public final class Block extends Value {
     }
 
     @Override
+    public List<Integer> getOperands() {
+        return new ArrayList<>();
+    }
+
+    @Override
     public void print(PrintStream stream) {
         stream.printf("  %s:\n", name);
         for (int instruction : values) {
@@ -81,12 +93,24 @@ public final class Block extends Value {
 
     @Override
     public void emit(List<AsmValue> values) {
+        emittedValue = new LabelOperand(".L" + name);
+    }
 
+    public void emitInstructions(List<AsmValue> values) {
+        values.add(new Label(".L" + name));
+        for (int instruction : this.values) {
+            parent.getValue(instruction).emit(values);
+        }
     }
 
     public void optimize(OptimizationLevel level) {
         if (level == OptimizationLevel.NONE) {
             return;
         }
+    }
+
+    @Override
+    public Operand getEmittedValue() {
+        return emittedValue.clone();
     }
 }

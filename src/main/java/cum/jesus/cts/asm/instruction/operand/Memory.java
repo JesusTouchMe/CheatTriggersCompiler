@@ -24,6 +24,19 @@ public final class Memory extends Operand {
     }
 
     @Override
+    public String ident() {
+        if (offset == 0) {
+            return "[" + addressRegister.ident() + "]";
+        } else {
+            if (offset > 0) {
+                return '[' + addressRegister.ident() + '+' + offset + ']';
+            } else {
+                return '[' + addressRegister.ident() + offset + ']';
+            }
+        }
+    }
+
+    @Override
     public Operand clone() {
         return new Memory((Register) addressRegister.clone(), offset);
     }

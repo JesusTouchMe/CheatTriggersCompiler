@@ -8,9 +8,16 @@ import cum.jesus.cts.asm.instruction.operand.Immediate;
 import cum.jesus.cts.asm.instruction.operand.Register;
 import cum.jesus.cts.asm.instruction.operand.StringOperand;
 
+import java.io.PrintStream;
+
 public final class PushInstruction extends SingleOperandInstruction {
     public PushInstruction(Operand source) {
         super(source);
+    }
+
+    @Override
+    public void print(PrintStream stream) {
+        stream.println("    push " + operand.ident());
     }
 
     @Override

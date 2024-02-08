@@ -34,6 +34,11 @@ public final class LabelOperand extends Immediate {
     }
 
     @Override
+    public String ident() {
+        return name;
+    }
+
+    @Override
     public Operand clone() {
         return new LabelOperand(name, location);
     }

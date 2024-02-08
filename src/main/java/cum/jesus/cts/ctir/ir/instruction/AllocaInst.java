@@ -1,12 +1,15 @@
 package cum.jesus.cts.ctir.ir.instruction;
 
 import cum.jesus.cts.asm.instruction.AsmValue;
+import cum.jesus.cts.asm.instruction.Operand;
+import cum.jesus.cts.asm.instruction.operand.StackMemory;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Function;
 import cum.jesus.cts.type.PointerType;
 import cum.jesus.cts.type.Type;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -38,6 +41,11 @@ public final class AllocaInst extends Instruction {
     }
 
     @Override
+    public List<Integer> getOperands() {
+        return new ArrayList<>();
+    }
+
+    @Override
     public void print(PrintStream stream) {
         stream.printf("%%%s = alloca %s", name, allocatedType.getName());
     }
@@ -49,6 +57,11 @@ public final class AllocaInst extends Instruction {
 
     @Override
     public void emit(List<AsmValue> values) {
+        emittedValue = new StackMemory(stackOffset);
+    }
 
+    @Override
+    public Operand getEmittedValue() {
+        return emittedValue.clone();
     }
 }

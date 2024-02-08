@@ -39,6 +39,11 @@ public class Immediate extends Operand {
     }
 
     @Override
+    public String ident() {
+        return String.valueOf(value);
+    }
+
+    @Override
     public Operand clone() {
         return new Immediate(value);
     }

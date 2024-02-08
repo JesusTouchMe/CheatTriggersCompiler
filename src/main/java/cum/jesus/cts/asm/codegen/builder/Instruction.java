@@ -1,6 +1,7 @@
 package cum.jesus.cts.asm.codegen.builder;
 
 import cum.jesus.cts.asm.codegen.Opcodes;
+import cum.jesus.cts.asm.codegen.OperandSize;
 import cum.jesus.cts.asm.codegen.OutputBuffer;
 import cum.jesus.cts.util.ImmediateVariant;
 import cum.jesus.cts.util.StaticList;
@@ -15,9 +16,9 @@ public final class Instruction {
 
     private Opcodes opcode;
     private byte[] operands;
-    private Optional<ImmediateVariant> immediate;
-    private Optional<String> string;
-    private Optional<Integer> stackMemory;
+    private Optional<ImmediateVariant> immediate = Optional.empty();
+    private Optional<String> string = Optional.empty();
+    private Optional<Integer> stackMemory = Optional.empty();
 
     Instruction(OutputBuffer output) {
         this.output = output;
@@ -67,13 +68,54 @@ public final class Instruction {
         return this;
     }
 
-    public Instruction operand(int index, int b) {
-        if (index < 0 || index >= operands.length) {
-            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + operands.length);
+    public Instruction operand(int index, OperandSize size, long b) {
+        switch (size) {
+            case BYTE:
+                if (index < 0 || index >= operands.length) {
+                    throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + operands.length);
+                }
+
+                operands[index] = (byte) b;
+                break;
+            case WORD:
+                if (index < 0 || index + 1 >= operands.length) {
+                    throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + operands.length);
+                }
+
+                operands[index + 1] = (byte) ((b >> 8) & 0xFF);
+                operands[index] = (byte) (b & 0xFF);
+                break;
+            case DWORD:
+                if (index < 0 || index + 3 >= operands.length) {
+                    throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + operands.length);
+                }
+
+                operands[index + 3] = (byte) ((b >> 24) & 0xFF);
+                operands[index + 2] = (byte) ((b >> 16) & 0xFF);
+                operands[index + 1] = (byte) ((b >> 8) & 0xFF);
+                operands[index] = (byte) (b & 0xFF);
+                break;
+            case QWORD:
+                if (index < 0 || index + 7 >= operands.length) {
+                    throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + operands.length);
+                }
+
+                operands[index + 7] = (byte) ((b >> 56) & 0xFF);
+                operands[index + 6] = (byte) ((b >> 48) & 0xFF);
+                operands[index + 5] = (byte) ((b >> 40) & 0xFF);
+                operands[index + 4] = (byte) ((b >> 32) & 0xFF);
+                operands[index + 3] = (byte) ((b >> 24) & 0xFF);
+                operands[index + 2] = (byte) ((b >> 16) & 0xFF);
+                operands[index + 1] = (byte) ((b >> 8) & 0xFF);
+                operands[index] = (byte) (b & 0xFF);
+                break;
         }
 
-        operands[index] = (byte) b;
         return this;
+    }
+
+    public Instruction operand(int index, int b) {
+        return operand(index, OperandSize.BYTE, b);
     }
 
     public void emit() {
@@ -93,7 +135,8 @@ public final class Instruction {
 
         if (immediate.isPresent()) {
             immediate.get().writeToOutput(output);
-        } else if (string.isPresent()) {
+        }
+        if (string.isPresent()) {
             output.writeb(Opcodes.IMMS.getOpcode());
             output.writes((short) string.get().length());
             byte[] bytes = string.get().getBytes();
@@ -101,7 +144,8 @@ public final class Instruction {
             for (int i = 0; i < length; i++) {
                 output.write(bytes[i]);
             }
-        } else if (stackMemory.isPresent()) {
+        }
+        if (stackMemory.isPresent()) {
             output.writeb(Opcodes.PMEMI.getOpcode());
             output.writei(stackMemory.get());
         }

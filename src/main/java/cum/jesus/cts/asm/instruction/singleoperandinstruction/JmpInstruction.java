@@ -9,9 +9,16 @@ import cum.jesus.cts.asm.instruction.operand.Immediate;
 import cum.jesus.cts.asm.instruction.operand.LabelOperand;
 import cum.jesus.cts.asm.instruction.operand.Register;
 
+import java.io.PrintStream;
+
 public final class JmpInstruction extends SingleOperandInstruction {
     public JmpInstruction(Operand count) {
         super(count);
+    }
+
+    @Override
+    public void print(PrintStream stream) {
+        stream.println("    jmp " + operand.ident());
     }
 
     @Override
@@ -20,7 +27,7 @@ public final class JmpInstruction extends SingleOperandInstruction {
             int value = ((LabelOperand) operand).getValue(builder);
             builder.createInstruction()
                     .opcode(Opcodes.JMP)
-                    .immediate((short) (value - builder.getPosition() - 2))
+                    .operand(0, OperandSize.WORD, value - builder.getPosition() - 2)
                     .emit();
             if (value == -1) {
                 ((LabelOperand) operand).reloc(builder, OperandSize.WORD, -1);
@@ -33,7 +40,7 @@ public final class JmpInstruction extends SingleOperandInstruction {
         } else if (operand instanceof Immediate) {
             builder.createInstruction()
                     .opcode(Opcodes.JMP)
-                    .immediate(((Immediate) operand).imm16())
+                    .operand(0, OperandSize.WORD, ((Immediate) operand).imm16())
                     .emit();
         }
     }

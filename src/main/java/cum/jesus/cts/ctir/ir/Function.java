@@ -2,20 +2,26 @@ package cum.jesus.cts.ctir.ir;
 
 import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Operand;
+import cum.jesus.cts.asm.instruction.fakes.ConstantPoolFake;
 import cum.jesus.cts.asm.instruction.fakes.FunctionInstructionFake;
+import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
+import cum.jesus.cts.asm.instruction.operand.Immediate;
 import cum.jesus.cts.asm.instruction.operand.Register;
+import cum.jesus.cts.asm.instruction.operand.StringOperand;
+import cum.jesus.cts.asm.instruction.singleoperandinstruction.AlcaInstruction;
 import cum.jesus.cts.asm.instruction.singleoperandinstruction.PushInstruction;
+import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.Module;
 import cum.jesus.cts.ctir.OptimizationLevel;
 import cum.jesus.cts.ctir.ir.instruction.AllocaInst;
 import cum.jesus.cts.type.FunctionType;
 import cum.jesus.cts.type.Type;
+import cum.jesus.cts.util.Pair;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public final class Function extends Value {
     private String name;
@@ -36,14 +42,14 @@ public final class Function extends Value {
 
         super.type = type;
 
-        int[] argRegisters = { 3, 4, 6, 7};
+        int[] argRegisters = { Register.regC, Register.regD, Register.regF, Register.regG};
 
         int i = 0;
         for (Type argType : type.getArgs()) {
             int id = instructionCount++;
             Argument arg = new Argument(module, id, argType, String.valueOf(id));
             values.add(arg);
-            arg.register = argRegisters.length > i ? argRegisters[i++] : -1; // Argument assumes it's on stack if its register is -1
+            arg.color = argRegisters.length > i ? argRegisters[i++] : -1; // Argument assumes it's on stack if its register is -1
             args.add(id);
         }
     }
@@ -96,6 +102,15 @@ public final class Function extends Value {
     }
 
     @Override
+    public List<Integer> getOperands() {
+        return new ArrayList<>();
+    }
+
+    public Operand getBlockEmittedValue(Block block) {
+        return block.getEmittedValue();
+    }
+
+    @Override
     public void print(PrintStream stream) {
         if (blocks.isEmpty()) {
             stream.printf("\n\ndeclare public %s %%%d@%s(", ((FunctionType) type).getReturnType().getName(), id, name);
@@ -138,12 +153,31 @@ public final class Function extends Value {
             return;
         }
 
+        allocateRegisters();
         sortAllocas();
 
         values.add(new FunctionInstructionFake(name));
+        values.add(new ConstantPoolFake(new StringOperand(name)));
 
         values.add(new PushInstruction(new Register(Register.regStackBase)));
-        //TODO: mov regSB, regST
+        values.add(new MovInstruction(new Register(Register.regStackBase), new Register(Register.regStackTop)));
+        if (totalStackOffset > 0) {
+            Operand stackOffset = new Immediate(totalStackOffset);
+            values.add(new AlcaInstruction(stackOffset));
+        }
+
+        emittedValue = new ConstPoolEntryOperand(module.constPoolOffset++);
+
+        for (int arg : args) {
+            this.values.get(arg).emit(values);
+        }
+
+        for (Block block : blocks) {
+            block.emit(values);
+        }
+        for (Block block : blocks) {
+            block.emitInstructions(values);
+        }
     }
 
     public void optimize(OptimizationLevel level) {
@@ -155,6 +189,121 @@ public final class Function extends Value {
     @Override
     public Operand getEmittedValue() {
         return emittedValue.clone();
+    }
+
+    private void allocateRegisters() {
+        List<Pair<Integer, Boolean>> allNodes = new ArrayList<>();
+        List<Integer> liveNodes = new ArrayList<>();
+
+        for (int arg : args) {
+            for (int id : liveNodes) {
+                values.get(arg).edges.add(new Pair<>(id, true));
+                values.get(id).edges.add(new Pair<>(arg, true));
+            }
+            liveNodes.add(arg);
+            allNodes.add(new Pair<>(arg, true));
+        }
+
+        for (Block block : blocks) {
+            for (int instruction : block.getInstructions()) {
+                if (values.get(instruction).requiresRegister()) {
+                    for (int id : liveNodes) {
+                        values.get(instruction).edges.add(new Pair<>(id, true));
+                        values.get(id).edges.add(new Pair<>(instruction, true));
+                    }
+                    liveNodes.add(instruction);
+                    allNodes.add(new Pair<>(instruction, true));
+                }
+
+                for (int operand : values.get(instruction).getOperands()) {
+                    Iterator<Integer> it = liveNodes.iterator();
+                    while (it.hasNext()) {
+                        int n = it.next();
+                        if (n == operand) {
+                            it.remove();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        for (int liveNode : liveNodes) {
+            for (Pair<Integer, Boolean> node : allNodes) {
+                Optional<Pair<Integer, Boolean>> it = values.get(node.first).edges.stream().filter(edge -> edge.first == liveNode).findFirst();
+
+                if (it.isPresent()) {
+                    values.get(node.first).edges.remove(it.get());
+                }
+            }
+        }
+
+        Stack<Integer> stack = new Stack<>();
+        final int k = 6;
+
+        int count = allNodes.size();
+        while (count != 0) {
+            for (int i = 0; i < allNodes.size(); i++) {
+                Pair<Integer, Boolean> it = allNodes.get(i);
+
+                if (it.second && values.get(it.first).edges.size() < k) {
+                    stack.push(it.first);
+                    for (Pair<Integer, Boolean> node : allNodes) {
+                        if (!node.equals(it)) {
+                            Optional<Pair<Integer, Boolean>> edge = values.get(node.first).edges.stream().filter(e -> values.get(e.first).getId() == it.first).findFirst();
+
+                            if (edge.isPresent()) {
+                                edge.get().second = false;
+                            }
+                        }
+                    }
+                    it.second = false;
+                    count -= 1;
+                }
+            }
+        }
+
+        final String[] registers = {
+                "regA", "regB", "regC",
+                "regD", "regF", "regG",
+        };
+        final String[] colors = {
+                "red", "blue", "green",
+                "yellow", "purple", "orange",
+        };
+
+        try (FileWriter graphout = new FileWriter("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Interpreter\\ctir.dot", true)) {
+            graphout.write("\n\nstrict graph {");
+
+            while (!stack.empty()) {
+                int id = stack.pop();
+
+                for (Pair<Integer, Boolean> edge : values.get(id).edges) {
+                    graphout.write("\n\tN" + id + " -- N" + edge.first);
+                }
+
+                int color = values.get(id).color;
+                if (color == -1) {
+                    color = 0;
+                    while (color < k) {
+                        int finalColor = color;
+                        Optional<Pair<Integer, Boolean>> it = values.get(id).edges.stream().filter(edge -> values.get(edge.first).color == finalColor).findFirst();
+
+                        if (!it.isPresent()) {
+                            break;
+                        }
+                        color++;
+                    }
+                    values.get(id).color = color;
+                }
+                values.get(id).register = registers[color];
+
+                graphout.write("\n\tN" + id + " [color=" + colors[color] + "]");
+            }
+            graphout.write("\n}");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void sortAllocas() {
