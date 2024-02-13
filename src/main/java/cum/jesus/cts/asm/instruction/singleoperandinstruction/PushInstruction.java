@@ -4,9 +4,7 @@ import cum.jesus.cts.asm.codegen.Opcodes;
 import cum.jesus.cts.asm.codegen.builder.OpcodeBuilder;
 import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.SingleOperandInstruction;
-import cum.jesus.cts.asm.instruction.operand.Immediate;
-import cum.jesus.cts.asm.instruction.operand.Register;
-import cum.jesus.cts.asm.instruction.operand.StringOperand;
+import cum.jesus.cts.asm.instruction.operand.*;
 
 import java.io.PrintStream;
 
@@ -54,6 +52,16 @@ public final class PushInstruction extends SingleOperandInstruction {
                             .emit();
                     break;
             }
+        } else if (operand instanceof Memory) {
+            builder.createInstruction()
+                    .opcode(Opcodes.PUSH)
+                    .memory((Memory) operand)
+                    .emit();
+        } else if (operand instanceof ConstPoolEntryOperand) {
+            builder.createInstruction()
+                    .opcode(Opcodes.PUSH)
+                    .constEntry(((ConstPoolEntryOperand) operand).getIndex())
+                    .emit();
         } else if (operand instanceof StringOperand) {
             builder.createInstruction()
                     .opcode(Opcodes.PUSH)

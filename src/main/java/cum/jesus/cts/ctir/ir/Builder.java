@@ -17,6 +17,16 @@ public final class Builder {
         this.insertPoint = insertPoint;
     }
 
+    public RetInst createRet(Value returnValue) {
+        int id = insertPoint.getParent().getValueCount();
+        RetInst ret = new RetInst(insertPoint, id, returnValue);
+
+        insertPoint.insertValue(ret);
+        insertPoint.getParent().addValue(ret);
+
+        return ret;
+    }
+
     public CallInst createCall(Value callee, List<Value> parameters, String name) {
         int id = insertPoint.getParent().getValueCount();
         if (name.isEmpty()) {

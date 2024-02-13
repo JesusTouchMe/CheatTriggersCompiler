@@ -15,12 +15,20 @@ public final class PopInstruction extends SingleOperandInstruction {
 
     @Override
     public void print(PrintStream stream) {
-        stream.println("    pop " + operand.ident());
+        if (operand == null) {
+            stream.println("    pop");
+        } else {
+            stream.println("    pop " + operand.ident());
+        }
     }
 
     @Override
     public void emit(OpcodeBuilder builder) {
-        if (operand instanceof Register) {
+        if (operand == null) {
+            builder.createInstruction()
+                    .opcode(Opcodes.POP)
+                    .emit();
+        } else if (operand instanceof Register) {
             builder.createInstruction()
                     .opcode(Opcodes.POP)
                     .operand(0, ((Register) operand).getId())

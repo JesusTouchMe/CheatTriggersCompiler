@@ -1,17 +1,7 @@
-func println(int msg) {
-    int yep = msg + 15;
-    int nope = yep + msg;
-}
+func add(int a, int b) = a + b;
 
-func test() {
-    int sex = 42 / 2;
-    println(sex);
-}
+func<int> main(int argc, long argv) {
+    int t = add(2, 2);
 
-func main(int argc, long argv) {
-    test();
-    test();
-    test();
-
-    int no = 2;
+    return t + 4;
 }

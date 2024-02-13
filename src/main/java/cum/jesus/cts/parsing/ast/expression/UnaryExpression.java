@@ -26,6 +26,8 @@ public final class UnaryExpression extends AstNode {
                 // TODO: error here
                 break;
         }
+
+        type = operand.getType();
     }
 
     @Override

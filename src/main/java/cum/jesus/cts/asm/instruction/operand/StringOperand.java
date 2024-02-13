@@ -15,7 +15,7 @@ public final class StringOperand extends Operand {
 
     @Override
     public String ident() {
-        return '"' + text + '"';
+        return '"' + text.replace("\n", "\\n") + '"';
     }
 
     @Override

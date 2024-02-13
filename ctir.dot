@@ -1,21 +1,37 @@
 
 
 strict graph {
-	N10 -- N9
-	N10 [color=red]
-	N9 -- N10
-	N9 [color=blue]
-	N4 [color=red]
-	N0 [color=yellow]
-}
-
-strict graph {
-	N5 [color=yellow]
-}
-
-strict graph {
+	N8 -- N6
+	N8 -- N7
+	N8 [color=red]
+	N7 -- N6
+	N7 -- N8
+	N7 [color=blue]
+	N6 -- N7
+	N6 -- N8
+	N6 [color=green]
 	N1 -- N0
-	N1 [color=purple]
+	N1 [color=yellow]
 	N0 -- N1
-	N0 [color=yellow]
+	N0 [color=green]
+}
+
+strict graph {
+	N13 -- N11
+	N13 [color=red]
+	N11 -- N13
+	N11 [color=blue]
+	N9 -- N7
+	N9 -- N8
+	N9 [color=red]
+	N8 -- N7
+	N8 -- N9
+	N8 [color=yellow]
+	N7 -- N8
+	N7 -- N9
+	N7 [color=green]
+	N1 -- N0
+	N1 [color=yellow]
+	N0 -- N1
+	N0 [color=green]
 }

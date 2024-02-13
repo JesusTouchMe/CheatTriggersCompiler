@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
 
-public final class Function extends Value {
+public class Function extends Value {
     private String name;
     private List<Block> blocks;
     private List<Value> values;
@@ -113,7 +113,7 @@ public final class Function extends Value {
     @Override
     public void print(PrintStream stream) {
         if (blocks.isEmpty()) {
-            stream.printf("\n\ndeclare public %s %%%d@%s(", ((FunctionType) type).getReturnType().getName(), id, name);
+            stream.printf("\n\ndeclare public %s @%s(", ((FunctionType) type).getReturnType().getName(), name);
             Iterator<Integer> iterator = args.iterator();
             while (iterator.hasNext()) {
                 stream.print(values.get(iterator.next()).ident());
@@ -125,7 +125,7 @@ public final class Function extends Value {
             return;
         }
 
-        stream.printf("\n\ndefine public %s %%%d@%s(", ((FunctionType) type).getReturnType().getName(), id, name);
+        stream.printf("\n\ndefine public %s @%s(", ((FunctionType) type).getReturnType().getName(), name);
         Iterator<Integer> iterator = args.iterator();
         while (iterator.hasNext()) {
             stream.print(values.get(iterator.next()).ident());
@@ -144,7 +144,7 @@ public final class Function extends Value {
 
     @Override
     public String ident() {
-        return String.format("%%%d@%s", id, name);
+        return String.format("@%s", name);
     }
 
     @Override
@@ -239,7 +239,7 @@ public final class Function extends Value {
         }
 
         Stack<Integer> stack = new Stack<>();
-        final int k = 6;
+        final int k = 8;
 
         int count = allNodes.size();
         while (count != 0) {
@@ -265,11 +265,13 @@ public final class Function extends Value {
 
         final String[] registers = {
                 "regA", "regB", "regC",
-                "regD", "regF", "regG",
+                "regD", "regE", "regF",
+                "regG", "regH"
         };
         final String[] colors = {
                 "red", "blue", "green",
                 "yellow", "purple", "orange",
+                "cyan", "magenta"
         };
 
         try (FileWriter graphout = new FileWriter("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Interpreter\\ctir.dot", true)) {
@@ -284,7 +286,7 @@ public final class Function extends Value {
 
                 int color = values.get(id).color;
                 if (color == -1) {
-                    color = 0;
+                    color = 1; // 0 is special ed prefix buffer, start with 1 :D
                     while (color < k) {
                         int finalColor = color;
                         Optional<Pair<Integer, Boolean>> it = values.get(id).edges.stream().filter(edge -> values.get(edge.first).color == finalColor).findFirst();
@@ -296,9 +298,9 @@ public final class Function extends Value {
                     }
                     values.get(id).color = color;
                 }
-                values.get(id).register = registers[color];
+                values.get(id).register = registers[color - 1];
 
-                graphout.write("\n\tN" + id + " [color=" + colors[color] + "]");
+                graphout.write("\n\tN" + id + " [color=" + colors[color - 1] + "]");
             }
             graphout.write("\n}");
         } catch (IOException e) {
@@ -317,12 +319,12 @@ public final class Function extends Value {
             }
         }
 
-        temp.sort(Comparator.comparingInt(lhs -> lhs.getAllocatedType().getSize()));
+        //temp.sort((lhs, rhs) -> Integer.compare(rhs.getAllocatedType().getSize(), lhs.getAllocatedType().getSize()));
 
         int offset = 0;
         for (AllocaInst alloca : temp) {
-            offset += 1; // an alloca is 1 value aka 1 size
-            alloca.setStackOffset(allocaSignature, offset);
+            offset += 1; // an alloca is 1 value aka 1 size cuz vm works in values not bytes
+            alloca.setStackOffset(allocaSignature, (short) offset);
         }
 
         totalStackOffset = offset;

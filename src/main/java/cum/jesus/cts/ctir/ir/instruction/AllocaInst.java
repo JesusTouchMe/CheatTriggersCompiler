@@ -16,7 +16,7 @@ import java.util.Objects;
 public final class AllocaInst extends Instruction {
     private String name;
     private Type allocatedType;
-    private int stackOffset;
+    private short stackOffset;
 
     public AllocaInst(Block parent, int id, Type allocatedType, String name) {
         super(parent.getParent().getModule(), parent, id);
@@ -26,7 +26,7 @@ public final class AllocaInst extends Instruction {
         this.allocatedType = allocatedType;
     }
 
-    public void setStackOffset(Function.AllocaSignature signature, int stackOffset) {
+    public void setStackOffset(Function.AllocaSignature signature, short stackOffset) {
         Objects.requireNonNull(signature);
         this.stackOffset = stackOffset;
     }

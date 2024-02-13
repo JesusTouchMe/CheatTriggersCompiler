@@ -4,9 +4,7 @@ import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.operand.Memory;
 import cum.jesus.cts.asm.instruction.operand.Register;
-import cum.jesus.cts.asm.instruction.operand.StackMemory;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.LodInstruction;
-import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Value;
 import cum.jesus.cts.type.PointerType;
@@ -54,11 +52,9 @@ public final class LoadInst extends Instruction {
 
         if (ptrOperand instanceof Memory) {
             values.add(new LodInstruction(Register.get(register), ptrOperand));
-        } else if (ptrOperand instanceof StackMemory) {
-            values.add(new MovInstruction(Register.get(register), ptrOperand));
         } else {
             Register reg = (Register) ptrOperand;
-            Operand memory = new Memory(reg, 0);
+            Operand memory = new Memory(reg);
 
             values.add(new LodInstruction(Register.get(register), memory));
         }

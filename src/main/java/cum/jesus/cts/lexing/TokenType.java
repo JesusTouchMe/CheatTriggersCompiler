@@ -21,4 +21,5 @@ public enum TokenType {
     EQUALS,
 
     KEYWORD_FUNC,
+    KEYWORD_RETURN,
 }

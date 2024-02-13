@@ -87,6 +87,11 @@ public final class CallInst extends Instruction {
 
         values.add(new CallInstruction(callee));
 
+        if (color == -1) {
+            color = Register.regE;
+            register = "regE";
+        }
+
         if (color != Register.regE) {
             values.add(new MovInstruction(Register.get(register), Register.get("regE")));
         }

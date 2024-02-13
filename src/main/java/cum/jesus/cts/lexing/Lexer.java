@@ -10,6 +10,7 @@ public final class Lexer {
 
     private static final Map<String, TokenType> keywords = new HashMap<String, TokenType>() {{
        put("func", TokenType.KEYWORD_FUNC);
+       put("return", TokenType.KEYWORD_RETURN);
     }};
 
     public Lexer(String text) {

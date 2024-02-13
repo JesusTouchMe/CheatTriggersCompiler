@@ -27,6 +27,8 @@ public class Main {
             graphout.delete();
         }
 
+        graphout = null; // let the gc remove the file cuz we don't need it
+
         Type.init();
 
         String text = new String(Files.readAllBytes(input.toPath()));

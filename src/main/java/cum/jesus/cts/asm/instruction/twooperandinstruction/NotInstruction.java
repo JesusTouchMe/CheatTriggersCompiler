@@ -4,10 +4,7 @@ import cum.jesus.cts.asm.codegen.Opcodes;
 import cum.jesus.cts.asm.codegen.builder.OpcodeBuilder;
 import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.TwoOperandInstruction;
-import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
-import cum.jesus.cts.asm.instruction.operand.Immediate;
-import cum.jesus.cts.asm.instruction.operand.Register;
-import cum.jesus.cts.asm.instruction.operand.StringOperand;
+import cum.jesus.cts.asm.instruction.operand.*;
 
 import java.io.PrintStream;
 
@@ -54,7 +51,7 @@ public final class NotInstruction extends TwoOperandInstruction {
                             .operand(2, lhs.getId())
                             .immediate(((Immediate) right).imm32())
                             .emit();
-
+                    break;
                 case QWORD:
                     builder.createInstruction()
                             .opcode(Opcodes.NOT)
@@ -63,14 +60,17 @@ public final class NotInstruction extends TwoOperandInstruction {
                             .emit();
                     break;
             }
-        } else if (right instanceof ConstPoolEntryOperand) {
-            builder.createInstruction()
-                    .opcode(Opcodes.CENT)
-                    .immediate(((ConstPoolEntryOperand) right).getIndex())
-                    .emit();
+        } else if (right instanceof Memory) {
             builder.createInstruction()
                     .opcode(Opcodes.NOT)
                     .operand(0, lhs.getId())
+                    .memory((Memory) right)
+                    .emit();
+        } else if (right instanceof ConstPoolEntryOperand) {
+            builder.createInstruction()
+                    .opcode(Opcodes.NOT)
+                    .operand(0, lhs.getId())
+                    .constEntry(((ConstPoolEntryOperand) right).getIndex())
                     .emit();
         } else if (right instanceof StringOperand) {
             builder.createInstruction()

@@ -7,6 +7,7 @@ import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.parsing.ast.AstNode;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public final class CallExpression extends AstNode {
@@ -32,6 +33,18 @@ public final class CallExpression extends AstNode {
 
     @Override
     public String toString() {
-        return null;
+        StringBuilder sb = new StringBuilder().append(callee.toString()).append('(');
+
+        Iterator<AstNode> it = params.iterator();
+        while (it.hasNext()) {
+            AstNode node = it.next();
+            sb.append(node.toString());
+            if (it.hasNext()) {
+                sb.append(", ");
+            }
+        }
+        sb.append(')');
+
+        return sb.toString();
     }
 }

@@ -12,6 +12,7 @@ import cum.jesus.cts.type.FunctionType;
 import cum.jesus.cts.type.Type;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public final class Function extends AstNode {
@@ -32,7 +33,7 @@ public final class Function extends AstNode {
     }
 
     @Override
-    public Value emit(Module module, Builder builder, Environment _) {
+    public Value emit(Module module, Builder builder, Environment __) {
         List<Type> argTypes = new ArrayList<>();
         for (FunctionArgument arg : args) {
             argTypes.add(arg.getType());
@@ -61,6 +62,28 @@ public final class Function extends AstNode {
 
     @Override
     public String toString() {
-        return null;
+        StringBuilder sb = new StringBuilder()
+                .append("func<")
+                .append(returnType.getName())
+                .append("> ")
+                .append(name)
+                .append('(');
+
+        Iterator<FunctionArgument> it = args.iterator();
+        while (it.hasNext()) {
+            FunctionArgument arg = it.next();
+            sb.append(arg.toString());
+            if (it.hasNext()) {
+                sb.append(", ");
+            }
+        }
+        sb.append(") {\n").append("    ");
+
+        for (AstNode node : body) {
+            sb.append(node.toString()).append("\n    ");
+        }
+        sb.append('}');
+
+        return sb.toString();
     }
 }

@@ -39,6 +39,8 @@ public final class BinaryExpression extends AstNode {
                 // TODO: error here
                 break;
         }
+
+        type = left.getType();
     }
 
     @Override

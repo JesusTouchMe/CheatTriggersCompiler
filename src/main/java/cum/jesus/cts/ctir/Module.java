@@ -33,6 +33,28 @@ public final class Module {
         return functions;
     }
 
+    public boolean hasFunction(String name) {
+        for (Function func : functions) {
+            if (func.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Function getFunction(int id) {
+        return functions.get(id);
+    }
+
+    public int getFunctionByName(String name) {
+        for (Function func : functions) {
+            if (func.getName().equals(name)) {
+                return func.getId();
+            }
+        }
+        return -1;
+    }
+
     public void insertFunction(Function func) {
         functions.add(func);
     }
@@ -46,6 +68,7 @@ public final class Module {
         for (Function func : functions) {
             func.print(stream);
         }
+        StartFunction.print(stream);
     }
 
     public void emit(OutputStream stream) throws IOException {
@@ -53,6 +76,8 @@ public final class Module {
         for (Function function : functions) {
             function.emit(values);
         }
+
+        StartFunction.emit(values, this);
 
         OutputBuffer output = new OutputBuffer();
         OpcodeBuilder builder = new OpcodeBuilder(output);
@@ -62,8 +87,8 @@ public final class Module {
             value.emit(builder);
         }
 
-        //builder.patchForwardLabels();
-        //output.emit(stream);
+        builder.patchForwardLabels();
+        output.emit(stream);
     }
 
     public void optimize(OptimizationLevel level) {

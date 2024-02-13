@@ -13,11 +13,10 @@ public final class JitInstruction extends TwoOperandInstruction {
 
     @Override
     public void print(PrintStream stream) {
-        stream.printf("    jit %s, %s", left.ident(), right.ident());
+        stream.printf("    jit %s, %s\n", left.ident(), right.ident());
     }
 
     @Override
     public void emit(OpcodeBuilder builder) {
-
     }
 }

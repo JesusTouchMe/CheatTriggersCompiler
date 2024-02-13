@@ -13,7 +13,7 @@ public final class JizInstruction extends TwoOperandInstruction {
 
     @Override
     public void print(PrintStream stream) {
-        stream.printf("    jiz %s, %s", left.ident(), right.ident());
+        stream.printf("    jiz %s, %s\n", left.ident(), right.ident());
     }
 
     @Override

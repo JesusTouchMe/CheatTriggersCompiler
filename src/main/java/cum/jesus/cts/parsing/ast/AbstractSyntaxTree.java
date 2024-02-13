@@ -15,7 +15,7 @@ public final class AbstractSyntaxTree {
         this.nodes = new ArrayList<>();
     }
 
-    public void put(AstNode node) {
+    public void add(AstNode node) {
         nodes.add(node);
     }
 

@@ -2,24 +2,24 @@ package cum.jesus.cts.asm.instruction.operand;
 
 import cum.jesus.cts.asm.instruction.Operand;
 
-public final class Memory extends Operand {
+public class Memory extends Operand {
     private Register addressRegister;
-    private int offset;
+    private short offset;
 
-    public Memory(Register addressRegister, int offset) {
+    public Memory(Register addressRegister, short offset) {
         this.addressRegister = addressRegister;
         this.offset = offset;
     }
 
     public Memory(Register addressRegister) {
-        this(addressRegister, 0);
+        this(addressRegister, (short) 0);
     }
 
     public Register getReg() {
         return addressRegister;
     }
 
-    public int getOffset() {
+    public short getOffset() {
         return offset;
     }
 

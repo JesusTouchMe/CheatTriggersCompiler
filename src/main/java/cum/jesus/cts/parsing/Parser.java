@@ -9,6 +9,7 @@ import cum.jesus.cts.parsing.ast.AstNode;
 import cum.jesus.cts.parsing.ast.expression.*;
 import cum.jesus.cts.parsing.ast.global.Function;
 import cum.jesus.cts.parsing.ast.global.FunctionArgument;
+import cum.jesus.cts.parsing.ast.statement.ReturnStatement;
 import cum.jesus.cts.parsing.ast.statement.VariableDeclaration;
 import cum.jesus.cts.type.Type;
 
@@ -32,7 +33,7 @@ public final class Parser {
         AbstractSyntaxTree ast = new AbstractSyntaxTree();
 
         while (pos < tokens.size() && current().getType() != TokenType.EOF) {
-            ast.put(global());
+            ast.add(global());
         }
 
         return ast;
@@ -119,6 +120,9 @@ public final class Parser {
 
     private AstNode parsePrimary() {
         switch (current().getType()) {
+            case KEYWORD_RETURN:
+                return parseReturn();
+
             case TYPE:
                 return parseVariableDeclaration();
 
@@ -128,7 +132,7 @@ public final class Parser {
             case INTEGER_LITERAL:
                 return parseIntegerLiteral();
 
-                case LEFT_PAREN:
+            case LEFT_PAREN:
                 return parseParen();
 
             default:
@@ -146,12 +150,14 @@ public final class Parser {
         consume();
 
         Type type = Type.get("void");
+        boolean isTypeSpecified = false;
 
         if (current().getType() == TokenType.LEFT_ANGLE_BRACKET) {
             consume();
             type = parseType();
             expect(TokenType.RIGHT_ANGLE_BRACKET);
             consume();
+            isTypeSpecified = true;
         }
 
         expect(TokenType.IDENTIFIER);
@@ -180,7 +186,24 @@ public final class Parser {
             scope.symbols.put(arg.getName(), new Symbol(arg.getType(), arg.getName()));
         }
 
-        expect(TokenType.LEFT_BRACE); // TODO: func add(int a, int b) = a + b; becomes func<int> add(int a, int b) { return a + b; }
+        if (current().getType() == TokenType.EQUALS) {
+            consume();
+
+            AstNode value = expr();
+            expect(TokenType.SEMICOLON);
+            consume();
+
+            if (!isTypeSpecified) {
+                type = value.getType();
+            }
+
+            globalSymbols.put(name, new Symbol(type, name));
+            scope = outer;
+
+            return new Function(type, name, args, Collections.singletonList(new ReturnStatement(value)), functionScope);
+        }
+
+        expect(TokenType.LEFT_BRACE);
         consume();
 
         List<AstNode> body = new ArrayList<>();
@@ -195,6 +218,17 @@ public final class Parser {
         scope = outer;
 
         return new Function(type, name, args, body, functionScope);
+    }
+
+    private AstNode parseReturn() {
+        expect(TokenType.KEYWORD_RETURN);
+        consume();
+
+        if (current().getType() == TokenType.SEMICOLON) {
+            return new ReturnStatement(null);
+        }
+
+        return new ReturnStatement(expr());
     }
 
     private AstNode parseVariableDeclaration() {

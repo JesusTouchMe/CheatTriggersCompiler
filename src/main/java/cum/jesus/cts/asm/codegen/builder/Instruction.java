@@ -3,6 +3,7 @@ package cum.jesus.cts.asm.codegen.builder;
 import cum.jesus.cts.asm.codegen.Opcodes;
 import cum.jesus.cts.asm.codegen.OperandSize;
 import cum.jesus.cts.asm.codegen.OutputBuffer;
+import cum.jesus.cts.asm.instruction.operand.Memory;
 import cum.jesus.cts.util.ImmediateVariant;
 import cum.jesus.cts.util.StaticList;
 
@@ -18,7 +19,8 @@ public final class Instruction {
     private byte[] operands;
     private Optional<ImmediateVariant> immediate = Optional.empty();
     private Optional<String> string = Optional.empty();
-    private Optional<Integer> stackMemory = Optional.empty();
+    private Optional<Memory> memory = Optional.empty();
+    private Optional<Integer> constEntry = Optional.empty();
 
     Instruction(OutputBuffer output) {
         this.output = output;
@@ -63,8 +65,13 @@ public final class Instruction {
         return this;
     }
 
-    public Instruction stackMemory(long address) {
-        stackMemory = Optional.of((int) address);
+    public Instruction memory(Memory mem) {
+        memory = Optional.of(mem);
+        return this;
+    }
+
+    public Instruction constEntry(int constEntry) {
+        this.constEntry = Optional.of(constEntry);
         return this;
     }
 
@@ -82,32 +89,32 @@ public final class Instruction {
                     throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + operands.length);
                 }
 
-                operands[index + 1] = (byte) ((b >> 8) & 0xFF);
-                operands[index] = (byte) (b & 0xFF);
+                operands[index] = (byte) ((b >> 8) & 0xFF);
+                operands[index + 1] = (byte) (b & 0xFF);
                 break;
             case DWORD:
                 if (index < 0 || index + 3 >= operands.length) {
                     throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + operands.length);
                 }
 
-                operands[index + 3] = (byte) ((b >> 24) & 0xFF);
-                operands[index + 2] = (byte) ((b >> 16) & 0xFF);
-                operands[index + 1] = (byte) ((b >> 8) & 0xFF);
-                operands[index] = (byte) (b & 0xFF);
+                operands[index] = (byte) ((b >> 24) & 0xFF);
+                operands[index + 1] = (byte) ((b >> 16) & 0xFF);
+                operands[index + 2] = (byte) ((b >> 8) & 0xFF);
+                operands[index + 3] = (byte) (b & 0xFF);
                 break;
             case QWORD:
                 if (index < 0 || index + 7 >= operands.length) {
                     throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + operands.length);
                 }
 
-                operands[index + 7] = (byte) ((b >> 56) & 0xFF);
-                operands[index + 6] = (byte) ((b >> 48) & 0xFF);
-                operands[index + 5] = (byte) ((b >> 40) & 0xFF);
-                operands[index + 4] = (byte) ((b >> 32) & 0xFF);
-                operands[index + 3] = (byte) ((b >> 24) & 0xFF);
-                operands[index + 2] = (byte) ((b >> 16) & 0xFF);
-                operands[index + 1] = (byte) ((b >> 8) & 0xFF);
-                operands[index] = (byte) (b & 0xFF);
+                operands[index] = (byte) ((b >> 56) & 0xFF);
+                operands[index + 1] = (byte) ((b >> 48) & 0xFF);
+                operands[index + 2] = (byte) ((b >> 40) & 0xFF);
+                operands[index + 3] = (byte) ((b >> 32) & 0xFF);
+                operands[index + 4] = (byte) ((b >> 24) & 0xFF);
+                operands[index + 5] = (byte) ((b >> 16) & 0xFF);
+                operands[index + 6] = (byte) ((b >> 8) & 0xFF);
+                operands[index + 7] = (byte) (b & 0xFF);
                 break;
         }
 
@@ -145,9 +152,14 @@ public final class Instruction {
                 output.write(bytes[i]);
             }
         }
-        if (stackMemory.isPresent()) {
-            output.writeb(Opcodes.PMEMI.getOpcode());
-            output.writei(stackMemory.get());
+        if (memory.isPresent()) {
+            output.writeb(Opcodes.PMEM.getOpcode());
+            output.writeb((byte) memory.get().getReg().getId());
+            output.writes(memory.get().getOffset());
+        }
+        if (constEntry.isPresent()) {
+            output.writeb(Opcodes.CENT.getOpcode());
+            output.writes((short) ((int) constEntry.get()));
         }
 
         for (byte b : buffer) {

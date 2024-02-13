@@ -42,7 +42,7 @@ public final class BinOpInst extends Instruction {
 
     @Override
     public boolean requiresRegister() {
-        return color != -1;
+        return true; // dest
     }
 
     @Override
