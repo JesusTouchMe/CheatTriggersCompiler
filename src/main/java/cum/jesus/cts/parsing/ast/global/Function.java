@@ -8,6 +8,7 @@ import cum.jesus.cts.ctir.ir.instruction.AllocaInst;
 import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.environment.LocalSymbol;
 import cum.jesus.cts.parsing.ast.AstNode;
+import cum.jesus.cts.parsing.ast.statement.ReturnStatement;
 import cum.jesus.cts.type.FunctionType;
 import cum.jesus.cts.type.Type;
 
@@ -55,6 +56,10 @@ public final class Function extends AstNode {
 
         for (AstNode node : body) {
             node.emit(module, builder, scope);
+        }
+
+        if (!(body.get(body.size() - 1) instanceof ReturnStatement)) {
+            builder.createRet(null);
         }
 
         return function;

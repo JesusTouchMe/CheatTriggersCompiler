@@ -1,7 +1,8 @@
-func add(int a, int b) = a + b;
+func println(int msg) {
+    _code("int 0x05000000");
+}
 
 func<int> main(int argc, long argv) {
-    int t = add(2, 2);
-
-    return t + 4;
+    println(35 + 34);
+    return 0;
 }

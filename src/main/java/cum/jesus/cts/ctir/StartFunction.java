@@ -33,7 +33,7 @@ public final class StartFunction {
         if (mainFunction != -1) {
             values.add(new CallInstruction(module.getFunctionEmittedValue(mainFunction)));
         } else {
-            StringOperand failMsg = new StringOperand("No main function was located in this module. Provided by CTIR\n");
+            StringOperand failMsg = new StringOperand("No main function was located in this module\n");
             values.add(new MovInstruction(Register.get("regC"), failMsg));
             values.add(new IntInstruction(0x04)); // 0x04 = write, https://docs.google.com/spreadsheets/d/1hRenVVeyh3f27tRenfae8wAnFxkpI1cn3Jle5Rtt5TA/edit?usp=sharing
             values.add(new MovInstruction(Register.get("regE"), new Immediate(-1)));

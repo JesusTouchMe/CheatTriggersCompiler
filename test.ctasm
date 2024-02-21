@@ -1,0 +1,13 @@
+.data:
+    string "main"
+    string "hello world\n"
+
+main():
+    mov regC, #1
+    int 0x04000000
+    mov regE, 0
+    ret
+
+.start():
+    call #0
+    int 0x01000000

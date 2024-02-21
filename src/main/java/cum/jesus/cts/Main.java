@@ -1,8 +1,13 @@
 package cum.jesus.cts;
 
+import cum.jesus.cts.asm.codegen.OutputBuffer;
+import cum.jesus.cts.asm.codegen.builder.OpcodeBuilder;
+import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.ctir.Module;
 import cum.jesus.cts.ctir.ir.Builder;
 import cum.jesus.cts.environment.Environment;
+import cum.jesus.cts.error.DefaultErrorReporter;
+import cum.jesus.cts.error.ErrorReporter;
 import cum.jesus.cts.lexing.Lexer;
 import cum.jesus.cts.lexing.Token;
 import cum.jesus.cts.parsing.Parser;
@@ -17,12 +22,12 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        File input = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Interpreter\\test.cts");
+        File input = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.cts");
         if (!input.canRead()) {
             throw new IOException("Cannot read input file");
         }
 
-        File graphout = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Interpreter\\ctir.dot");
+        File graphout = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot");
         if (graphout.exists()) {
             graphout.delete();
         }
@@ -47,7 +52,7 @@ public class Main {
         module.print(System.out);
         System.out.println();
 
-        File output = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Interpreter\\test.ct");
+        File output = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.ct");
         if (!output.exists()) {
             output.createNewFile();
         }
@@ -56,5 +61,39 @@ public class Main {
         }
 
         module.emit(new FileOutputStream(output, false));
+    }
+
+    private static void asm() throws IOException {
+        File input = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.ctasm");
+        if (!input.canRead()) {
+            throw new IOException("Cannot read input file");
+        }
+        cum.jesus.cts.asm.lexing.Lexer lexer = new cum.jesus.cts.asm.lexing.Lexer(new String(Files.readAllBytes(input.toPath())));
+        List<cum.jesus.cts.asm.lexing.Token> tokens = lexer.tokenize();
+
+        ErrorReporter errorReporter = new DefaultErrorReporter();
+        cum.jesus.cts.asm.parsing.Parser parser = new cum.jesus.cts.asm.parsing.Parser(input.getName(), tokens, errorReporter);
+
+        List<AsmValue> values = parser.parse();
+        OutputBuffer outputBuffer = new OutputBuffer();
+        OpcodeBuilder builder = new OpcodeBuilder(outputBuffer);
+
+        for (AsmValue value : values) {
+            value.emit(builder);
+        }
+
+        builder.patchForwardLabels();
+
+        File output = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Interpreter\\test.ct");
+        if (!output.exists()) {
+            output.createNewFile();
+        }
+        if (!output.canWrite()) {
+            throw new IOException("Cannot write to output file");
+        }
+
+        outputBuffer.emit(new FileOutputStream(output, false));
+
+        System.exit(0);
     }
 }

@@ -17,7 +17,7 @@ public final class Instruction {
 
     private Opcodes opcode;
     private byte[] operands;
-    private Optional<ImmediateVariant> immediate = Optional.empty();
+    private List<ImmediateVariant> immediate = new ArrayList<>();
     private Optional<String> string = Optional.empty();
     private Optional<Memory> memory = Optional.empty();
     private Optional<Integer> constEntry = Optional.empty();
@@ -38,22 +38,22 @@ public final class Instruction {
     }
 
     public Instruction immediate(byte imm8) {
-        this.immediate = Optional.of(new ImmediateVariant(imm8));
+        immediate.add(new ImmediateVariant(imm8));
         return this;
     }
 
     public Instruction immediate(short imm16) {
-        this.immediate = Optional.of(new ImmediateVariant(imm16));
+        immediate.add(new ImmediateVariant(imm16));
         return this;
     }
 
     public Instruction immediate(int imm32) {
-        this.immediate = Optional.of(new ImmediateVariant(imm32));
+        immediate.add(new ImmediateVariant(imm32));
         return this;
     }
 
     public Instruction immediate(long imm64) {
-        this.immediate = Optional.of(new ImmediateVariant(imm64));
+        immediate.add(new ImmediateVariant(imm64));
         return this;
     }
 
@@ -140,8 +140,10 @@ public final class Instruction {
             }
         }
 
-        if (immediate.isPresent()) {
-            immediate.get().writeToOutput(output);
+        if (!immediate.isEmpty()) {
+            for (ImmediateVariant imm : immediate) {
+                imm.writeToOutput(output); //TODO all
+            }
         }
         if (string.isPresent()) {
             output.writeb(Opcodes.IMMS.getOpcode());
@@ -159,7 +161,7 @@ public final class Instruction {
         }
         if (constEntry.isPresent()) {
             output.writeb(Opcodes.CENT.getOpcode());
-            output.writes((short) ((int) constEntry.get()));
+            output.writes(constEntry.get().shortValue());
         }
 
         for (byte b : buffer) {

@@ -13,6 +13,10 @@ public final class Lexer {
        put("return", TokenType.KEYWORD_RETURN);
     }};
 
+    private static final Map<String, TokenType> builtins = new HashMap<String, TokenType>() {{
+       put("_code", TokenType.BUILTIN_CODE);
+    }};
+
     public Lexer(String text) {
         this.text = text;
     }
@@ -44,6 +48,10 @@ public final class Lexer {
 
             if (keywords.containsKey(str)) {
                 return Optional.of(new Token(keywords.get(str), str));
+            }
+
+            if (builtins.containsKey(str)) {
+                return Optional.of(new Token(builtins.get(str), str));
             }
 
             if (Type.exists(str)) {
@@ -119,6 +127,42 @@ public final class Lexer {
 
             case '=':
                 return Optional.of(new Token(TokenType.EQUALS, "="));
+
+            case '"': {
+                consume();
+                StringBuilder sb = new StringBuilder();
+
+                while (current() != '"') {
+                    if (current() == '\\') {
+                        consume();
+                        switch (current()) {
+                            case 'n':
+                                sb.append('\n');
+                                break;
+                            case '\'':
+                                sb.append('\'');
+                                break;
+                            case '"':
+                                sb.append('"');
+                                break;
+                            case '\\':
+                                sb.append('\\');
+                                break;
+                            case '0':
+                                sb.append('\0');
+                                break;
+                            default:
+                                return Optional.of(new Token(TokenType.ERROR, String.valueOf(current())));
+                        }
+                    } else {
+                        sb.append(current());
+                    }
+
+                    consume();
+                }
+
+                return Optional.of(new Token(TokenType.STRING_LITERAL, sb.toString()));
+            }
         }
 
         return Optional.of(new Token(TokenType.ERROR, String.valueOf(current())));

@@ -274,7 +274,7 @@ public class Function extends Value {
                 "cyan", "magenta"
         };
 
-        try (FileWriter graphout = new FileWriter("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Interpreter\\ctir.dot", true)) {
+        try (FileWriter graphout = new FileWriter("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot", true)) {
             graphout.write("\n\nstrict graph {");
 
             while (!stack.empty()) {

@@ -33,7 +33,7 @@ public final class IntInstruction extends SingleOperandInstruction {
 
     @Override
     public void print(PrintStream stream) {
-        stream.printf("    int 0x%08X\n", ((int) ((Immediate) operand).imm8() << 24) | ((int) bytes[0] << 16) | ((int) bytes[1] << 8) | ((int) bytes[2]));
+        stream.printf("    int 0x%08X\n", ((((Immediate) operand).imm32() & 0xFF) << 24) | ((bytes[0] & 0xFF) << 16) | ((bytes[1] & 0xFF) << 8) | ((bytes[2] & 0xFF)));
     }
 
     @Override

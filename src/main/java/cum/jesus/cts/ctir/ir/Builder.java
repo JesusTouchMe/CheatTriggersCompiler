@@ -2,6 +2,7 @@ package cum.jesus.cts.ctir.ir;
 
 import cum.jesus.cts.ctir.ir.constant.ConstantInt;
 import cum.jesus.cts.ctir.ir.instruction.*;
+import cum.jesus.cts.ctir.ir.misc.InlineAsm;
 import cum.jesus.cts.type.Type;
 
 import java.util.List;
@@ -215,5 +216,15 @@ public final class Builder {
 
     public ConstantInt createConstantInt(long value, Type type) {
         return createConstantInt(value, type, "");
+    }
+
+    public InlineAsm createInlineAsm(String asmCode, List<Value> params) {
+        int id = insertPoint.getParent().getValueCount();
+        InlineAsm asm = new InlineAsm(insertPoint, id, asmCode, params);
+
+        insertPoint.insertValue(asm);
+        insertPoint.getParent().addValue(asm);
+
+        return asm;
     }
 }

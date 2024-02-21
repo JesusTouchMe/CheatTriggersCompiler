@@ -7,6 +7,7 @@ public enum TokenType {
     IDENTIFIER,
     TYPE,
     INTEGER_LITERAL,
+    STRING_LITERAL,
 
     LEFT_PAREN, RIGHT_PAREN, // ()
     LEFT_BRACKET, RIGHT_BRACKET, // []
@@ -22,4 +23,6 @@ public enum TokenType {
 
     KEYWORD_FUNC,
     KEYWORD_RETURN,
+
+    BUILTIN_CODE,
 }

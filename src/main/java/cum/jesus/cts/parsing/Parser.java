@@ -6,6 +6,7 @@ import cum.jesus.cts.lexing.Token;
 import cum.jesus.cts.lexing.TokenType;
 import cum.jesus.cts.parsing.ast.AbstractSyntaxTree;
 import cum.jesus.cts.parsing.ast.AstNode;
+import cum.jesus.cts.parsing.ast.builtin.CodeBuiltin;
 import cum.jesus.cts.parsing.ast.expression.*;
 import cum.jesus.cts.parsing.ast.global.Function;
 import cum.jesus.cts.parsing.ast.global.FunctionArgument;
@@ -132,8 +133,14 @@ public final class Parser {
             case INTEGER_LITERAL:
                 return parseIntegerLiteral();
 
+            case STRING_LITERAL:
+                return parseStringLiteral();
+
             case LEFT_PAREN:
                 return parseParen();
+
+            case BUILTIN_CODE:
+                return parseBuiltinCode();
 
             default:
                 throw new RuntimeException("Primary issue: expected a primary expression token, got " + current().getType());
@@ -265,6 +272,15 @@ public final class Parser {
         return new IntegerLiteral(Long.parseLong(consume().getText()));
     }
 
+    private AstNode parseStringLiteral() {
+        expect(TokenType.STRING_LITERAL);
+        StringBuilder sb = new StringBuilder().append(consume().getText());
+        while (current().getType() == TokenType.STRING_LITERAL) {
+            sb.append(consume().getText());
+        }
+        return new StringLiteral(sb.toString());
+    }
+
     private AstNode parseParen() {
         consume();
         AstNode expr = expr();
@@ -285,6 +301,35 @@ public final class Parser {
         consume();
 
         return new CallExpression(callee, params);
+    }
+
+    private AstNode parseBuiltinCode() {
+        consume(); // _code
+        expect(TokenType.LEFT_PAREN);
+        consume();
+
+        expect(TokenType.STRING_LITERAL); // the asm code string
+        String asmCode = ((StringLiteral) parseStringLiteral()).getText();
+
+        if (current().getType() == TokenType.RIGHT_PAREN) {
+            consume();
+            return new CodeBuiltin(asmCode, new ArrayList<>());
+        }
+
+        expect(TokenType.COMMA);
+        consume();
+
+        List<AstNode> params = new ArrayList<>();
+        while (current().getType() != TokenType.RIGHT_PAREN) {
+            params.add(expr());
+            if (current().getType() != TokenType.RIGHT_PAREN) {
+                expect(TokenType.COMMA);
+                consume();
+            }
+        }
+        consume();
+
+        return new CodeBuiltin(asmCode, params);
     }
 
     private void expect(TokenType type) {
