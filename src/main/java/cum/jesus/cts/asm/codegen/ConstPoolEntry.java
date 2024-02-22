@@ -2,11 +2,13 @@ package cum.jesus.cts.asm.codegen;
 
 import cum.jesus.cts.asm.Types;
 import cum.jesus.cts.asm.instruction.Operand;
+import cum.jesus.cts.asm.instruction.fakes.FakeFunctionHandleOperand;
 import cum.jesus.cts.asm.instruction.operand.Immediate;
 import cum.jesus.cts.asm.instruction.operand.StringOperand;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Stores an operand which MUST be a constant value and writes it to the constant pool
@@ -54,6 +56,15 @@ public final class ConstPoolEntry {
              stream.write((((StringOperand) operand).getText().length() >> 8) & 0xFF);
              stream.write(((StringOperand) operand).getText().length() & 0xFF);
              byte[] bytes = ((StringOperand) operand).getText().getBytes();
+             int length = Math.min(0xFFFF, bytes.length);
+             for (int i = 0; i < length; i++) {
+                 stream.write(bytes[i]);
+             }
+         } else if (operand instanceof FakeFunctionHandleOperand) {
+             stream.write(Types.FUNCTION.toByte());
+             stream.write((((FakeFunctionHandleOperand) operand).getName().length() >> 8) & 0xFF);
+             stream.write(((FakeFunctionHandleOperand) operand).getName().length() & 0xFF);
+             byte[] bytes = ((FakeFunctionHandleOperand) operand).getName().getBytes();
              int length = Math.min(0xFFFF, bytes.length);
              for (int i = 0; i < length; i++) {
                  stream.write(bytes[i]);

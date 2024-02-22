@@ -22,12 +22,15 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        File input = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.cts");
+        //File input = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.cts");
+        File input = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\test.cts");
+
         if (!input.canRead()) {
             throw new IOException("Cannot read input file");
         }
 
-        File graphout = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot");
+        //File graphout = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot");
+        File graphout = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\ctir.dot");
         if (graphout.exists()) {
             graphout.delete();
         }
@@ -52,7 +55,8 @@ public class Main {
         module.print(System.out);
         System.out.println();
 
-        File output = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.ct");
+        //File output = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.ct");
+        File output = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\test.ct");
         if (!output.exists()) {
             output.createNewFile();
         }

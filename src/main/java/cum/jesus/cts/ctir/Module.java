@@ -18,7 +18,7 @@ public final class Module {
     private String name;
     private List<Function> functions;
 
-    public int constPoolOffset = 0;
+    public int constPoolOffset = 1;
 
     public Module(String name) {
         this.name = name;
@@ -64,7 +64,7 @@ public final class Module {
     }
 
     public void print(PrintStream stream) {
-        stream.printf("filename = \"%s\"", name);
+        stream.printf("module \"%s\"", name);
         for (Function func : functions) {
             func.print(stream);
         }
@@ -73,6 +73,7 @@ public final class Module {
 
     public void emit(OutputStream stream) throws IOException {
         List<AsmValue> values = new ArrayList<>();
+
         for (Function function : functions) {
             function.emit(values);
         }

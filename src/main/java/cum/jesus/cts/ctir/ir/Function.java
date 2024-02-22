@@ -3,6 +3,7 @@ package cum.jesus.cts.ctir.ir;
 import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.fakes.ConstantPoolFake;
+import cum.jesus.cts.asm.instruction.fakes.FakeFunctionHandleOperand;
 import cum.jesus.cts.asm.instruction.fakes.FunctionInstructionFake;
 import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
 import cum.jesus.cts.asm.instruction.operand.Immediate;
@@ -157,7 +158,7 @@ public class Function extends Value {
         sortAllocas();
 
         values.add(new FunctionInstructionFake(name));
-        values.add(new ConstantPoolFake(new StringOperand(name)));
+        values.add(new ConstantPoolFake(new FakeFunctionHandleOperand(name)));
 
         values.add(new PushInstruction(new Register(Register.regStackBase)));
         values.add(new MovInstruction(new Register(Register.regStackBase), new Register(Register.regStackTop)));
@@ -274,7 +275,7 @@ public class Function extends Value {
                 "cyan", "magenta"
         };
 
-        try (FileWriter graphout = new FileWriter("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot", true)) {
+        try (FileWriter graphout = new FileWriter("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\ctir.dot", true)) {
             graphout.write("\n\nstrict graph {");
 
             while (!stack.empty()) {

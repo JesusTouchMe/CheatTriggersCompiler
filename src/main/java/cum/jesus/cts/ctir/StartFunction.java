@@ -2,10 +2,11 @@ package cum.jesus.cts.ctir;
 
 import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.fakes.FunctionInstructionFake;
+import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
 import cum.jesus.cts.asm.instruction.operand.Immediate;
 import cum.jesus.cts.asm.instruction.operand.Register;
 import cum.jesus.cts.asm.instruction.operand.StringOperand;
-import cum.jesus.cts.asm.instruction.singleoperandinstruction.CallInstruction;
+import cum.jesus.cts.asm.instruction.twooperandinstruction.CallInstruction;
 import cum.jesus.cts.asm.instruction.singleoperandinstruction.IntInstruction;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 
@@ -31,7 +32,7 @@ public final class StartFunction {
         values.add(new FunctionInstructionFake(".start"));
 
         if (mainFunction != -1) {
-            values.add(new CallInstruction(module.getFunctionEmittedValue(mainFunction)));
+            values.add(new CallInstruction(new ConstPoolEntryOperand(0), module.getFunctionEmittedValue(mainFunction)));
         } else {
             StringOperand failMsg = new StringOperand("No main function was located in this module\n");
             values.add(new MovInstruction(Register.get("regC"), failMsg));

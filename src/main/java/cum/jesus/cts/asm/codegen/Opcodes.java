@@ -62,6 +62,9 @@ public enum Opcodes {
     CLD(0x30),
     CST(0x31),
 
+    MOD(0x36),
+    FUN(0x37),
+
     IMM8(0x80, 3),
     IMM16(0x81, 4),
     IMM32(0x82, 6),

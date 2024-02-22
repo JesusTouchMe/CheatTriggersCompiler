@@ -2,8 +2,9 @@ package cum.jesus.cts.ctir.ir.instruction;
 
 import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Operand;
+import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
 import cum.jesus.cts.asm.instruction.operand.Register;
-import cum.jesus.cts.asm.instruction.singleoperandinstruction.CallInstruction;
+import cum.jesus.cts.asm.instruction.twooperandinstruction.CallInstruction;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Function;
@@ -85,7 +86,7 @@ public final class CallInst extends Instruction {
     public void emit(List<AsmValue> values) {
         Operand callee = module.getFunctionEmittedValue(this.callee);
 
-        values.add(new CallInstruction(callee));
+        values.add(new CallInstruction(new ConstPoolEntryOperand(0), callee));
 
         if (color == -1) {
             color = Register.regE;

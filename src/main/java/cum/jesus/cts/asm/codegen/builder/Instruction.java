@@ -18,7 +18,7 @@ public final class Instruction {
     private Opcodes opcode;
     private byte[] operands;
     private List<ImmediateVariant> immediate = new ArrayList<>();
-    private Optional<String> string = Optional.empty();
+    private List<String> string = new ArrayList<>();
     private Optional<Memory> memory = Optional.empty();
     private Optional<Integer> constEntry = Optional.empty();
 
@@ -61,7 +61,7 @@ public final class Instruction {
         if (str.length() > 0xFFFF) {
             System.out.println("Warning: runtime string immediate is over the max length of 0xFFFF bytes long. Some of it will be cut off");
         }
-        string = Optional.of(str);
+        string.add(str);
         return this;
     }
 
@@ -145,13 +145,15 @@ public final class Instruction {
                 imm.writeToOutput(output); //TODO all
             }
         }
-        if (string.isPresent()) {
-            output.writeb(Opcodes.IMMS.getOpcode());
-            output.writes((short) string.get().length());
-            byte[] bytes = string.get().getBytes();
-            int length = Math.min(0xFFFF, bytes.length);
-            for (int i = 0; i < length; i++) {
-                output.write(bytes[i]);
+        if (!string.isEmpty()) {
+            for (String str : string) {
+                output.writeb(Opcodes.IMMS.getOpcode());
+                output.writes((short) str.length());
+                byte[] bytes = str.getBytes();
+                int length = Math.min(0xFFFF, bytes.length);
+                for (int i = 0; i < length; i++) {
+                    output.write(bytes[i]);
+                }
             }
         }
         if (memory.isPresent()) {

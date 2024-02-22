@@ -8,6 +8,11 @@ public enum Types {
 
     STRING(0x05),
 
+    /**
+     * Special type which associates a function handle at runtime when loading the constant pool. Only has a function name in file
+     */
+    FUNCTION(0x06),
+
     ;
 
     private final int typeCode;

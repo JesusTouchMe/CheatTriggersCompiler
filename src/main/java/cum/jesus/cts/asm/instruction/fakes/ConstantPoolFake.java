@@ -3,6 +3,7 @@ package cum.jesus.cts.asm.instruction.fakes;
 import cum.jesus.cts.asm.codegen.builder.OpcodeBuilder;
 import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Operand;
+import cum.jesus.cts.asm.instruction.operand.StringOperand;
 
 import java.io.PrintStream;
 
@@ -18,7 +19,13 @@ public final class ConstantPoolFake extends AsmValue {
 
     @Override
     public void print(PrintStream stream) {
-
+        if (op instanceof StringOperand) {
+            stream.printf("    string %s\n", op.ident());
+        } else if (op instanceof FakeFunctionHandleOperand) {
+            stream.printf("    function %s\n", op.ident());
+        } else {
+            stream.printf("    number %s\n", op.ident());
+        }
     }
 
     @Override
