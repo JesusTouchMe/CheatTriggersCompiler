@@ -31,7 +31,6 @@ public final class Argument extends Value {
 
     @Override
     public void print(PrintStream stream) {
-
     }
 
     @Override

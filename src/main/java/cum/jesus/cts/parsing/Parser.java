@@ -25,9 +25,7 @@ public final class Parser {
     public Parser(List<Token> tokens, Environment scope) {
         this.tokens = tokens;
         this.scope = scope;
-        globalSymbols = new TreeMap<String, Symbol>() {{
-            put("println", new Symbol(Type.get("void"), "println"));
-        }};
+        globalSymbols = new TreeMap<String, Symbol>();
     }
 
     public AbstractSyntaxTree parse() {
@@ -156,7 +154,7 @@ public final class Parser {
         expect(TokenType.KEYWORD_FUNC);
         consume();
 
-        Type type = Type.get("void");
+        Type type = Type.getVoidType();
         boolean isTypeSpecified = false;
 
         if (current().getType() == TokenType.LEFT_ANGLE_BRACKET) {
@@ -201,13 +199,13 @@ public final class Parser {
             consume();
 
             if (!isTypeSpecified) {
-                type = value.getType();
+                type = value.getType() != null ? value.getType() : Type.getVoidType();
             }
 
             globalSymbols.put(name, new Symbol(type, name));
             scope = outer;
 
-            return new Function(type, name, args, Collections.singletonList(new ReturnStatement(value)), functionScope);
+            return new Function(type, name, args, Collections.singletonList(new ReturnStatement(value)), functionScope).singleStatement();
         }
 
         expect(TokenType.LEFT_BRACE);

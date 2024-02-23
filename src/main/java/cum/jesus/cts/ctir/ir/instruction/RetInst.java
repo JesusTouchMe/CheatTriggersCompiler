@@ -15,11 +15,19 @@ import java.util.Collections;
 import java.util.List;
 
 public final class RetInst extends Instruction {
-    private int returnValue;
+    private final int returnValue;
 
     public RetInst(Block parent, int id, Value returnValue) {
         super(parent.getParent().getModule(), parent, id);
         this.returnValue = returnValue != null ? returnValue.getId() : -1;
+
+
+        if (this.returnValue != -1) {
+            assert parent.getParent().getValue(this.returnValue).getType().equals(parent.getParent().getReturnType());
+            if (parent.getParent().getValue(this.returnValue).color == -1) {
+                parent.getParent().getValue(this.returnValue).color = Register.regE;
+            }
+        }
     }
 
     public Value getReturnValue() {

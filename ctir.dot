@@ -5,6 +5,7 @@ strict graph {
 }
 
 strict graph {
+	N12 [color=purple]
 	N8 [color=green]
 	N1 -- N0
 	N1 [color=yellow]

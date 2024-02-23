@@ -11,6 +11,7 @@ import cum.jesus.cts.type.Type;
 import cum.jesus.cts.util.exceptions.UnreachableStatementException;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class Variable extends AstNode {
     private String name;
@@ -36,7 +37,11 @@ public final class Variable extends AstNode {
             throw UnreachableStatementException.INSTANCE;
         }
 
-        return builder.createLoad(variable.get().alloca);
+        AtomicReference<Value> value = new AtomicReference<>();
+        // return builder.createLoad(variable.get().alloca);
+        variable.get().alloca.consume(value::set, value::set);
+
+        return builder.createLoad(value.get());
     }
 
     @Override

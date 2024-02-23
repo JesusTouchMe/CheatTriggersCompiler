@@ -5,6 +5,7 @@ import cum.jesus.cts.ctir.ir.Builder;
 import cum.jesus.cts.ctir.ir.Value;
 import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.parsing.ast.AstNode;
+import cum.jesus.cts.type.Type;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,8 @@ public final class CodeBuiltin extends AstNode {
     public CodeBuiltin(String asmCode, List<AstNode> params) {
         this.asmCode = asmCode;
         this.params = params;
+
+        super.type = Type.getVoidType();
     }
 
     @Override

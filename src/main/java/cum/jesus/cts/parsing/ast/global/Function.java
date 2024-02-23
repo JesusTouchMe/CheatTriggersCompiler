@@ -23,6 +23,11 @@ public final class Function extends AstNode {
     private List<AstNode> body;
     private Environment scope;
 
+    /**
+     * func add(int a, int b) = a + b; is a singleStatement function
+     */
+    private boolean singleStatement = false;
+
     public Function(Type type, final String name, List<FunctionArgument> args, List<AstNode> body, Environment scope) {
         this.returnType = type;
         super.type = type;
@@ -31,6 +36,11 @@ public final class Function extends AstNode {
         this.args = args;
         this.body = body;
         this.scope = scope;
+    }
+
+    public Function singleStatement() {
+        this.singleStatement = true;
+        return this;
     }
 
     @Override
@@ -47,11 +57,18 @@ public final class Function extends AstNode {
         Block entry = Block.create("", function);
         builder.setInsertPoint(entry);
 
-        int i = 0;
-        for (FunctionArgument arg : args) {
-            AllocaInst alloca = builder.createAlloca(arg.getType());
-            scope.variables.put(arg.getName(), new LocalSymbol(alloca, arg.getType()));
-            builder.createStore(alloca, function.getArgument(i++));
+        if (!singleStatement) {
+            int i = 0;
+            for (FunctionArgument arg : args) {
+                AllocaInst alloca = builder.createAlloca(arg.getType());
+                scope.variables.put(arg.getName(), new LocalSymbol(alloca, arg.getType()));
+                builder.createStore(alloca, function.getArgument(i++));
+            }
+        } else {
+            int i = 0;
+            for (FunctionArgument arg : args) {
+                scope.variables.put(arg.getName(), new LocalSymbol(function.getArgument(i++), arg.getType()));
+            }
         }
 
         for (AstNode node : body) {
