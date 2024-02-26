@@ -4,6 +4,7 @@ import cum.jesus.cts.asm.codegen.OutputBuffer;
 import cum.jesus.cts.asm.codegen.builder.OpcodeBuilder;
 import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.ctir.Module;
+import cum.jesus.cts.ctir.OptimizationLevel;
 import cum.jesus.cts.ctir.ir.Builder;
 import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.error.DefaultErrorReporter;
@@ -22,15 +23,15 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        //File input = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.cts");
-        File input = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\test.cts");
+        File input = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.cts");
+        //File input = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\test.cts");
 
         if (!input.canRead()) {
             throw new IOException("Cannot read input file");
         }
 
-        //File graphout = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot");
-        File graphout = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\ctir.dot");
+        File graphout = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot");
+        //File graphout = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\ctir.dot");
         if (graphout.exists()) {
             graphout.delete();
         }
@@ -54,9 +55,13 @@ public class Main {
         ast.emit(module, builder, globalScope);
         module.print(System.out);
         System.out.println();
+        System.out.println();
+        module.optimize(OptimizationLevel.HIGH);
+        module.print(System.out);
+        System.out.println();
 
-        //File output = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.ct");
-        File output = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\test.ct");
+        File output = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.ct");
+        //File output = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\test.ct");
         if (!output.exists()) {
             output.createNewFile();
         }

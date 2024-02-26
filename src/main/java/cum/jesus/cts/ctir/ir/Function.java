@@ -8,7 +8,6 @@ import cum.jesus.cts.asm.instruction.fakes.FunctionInstructionFake;
 import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
 import cum.jesus.cts.asm.instruction.operand.Immediate;
 import cum.jesus.cts.asm.instruction.operand.Register;
-import cum.jesus.cts.asm.instruction.operand.StringOperand;
 import cum.jesus.cts.asm.instruction.singleoperandinstruction.AlcaInstruction;
 import cum.jesus.cts.asm.instruction.singleoperandinstruction.PushInstruction;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
@@ -154,9 +153,6 @@ public class Function extends Value {
             return;
         }
 
-        allocateRegisters();
-        sortAllocas();
-
         values.add(new FunctionInstructionFake(name));
         values.add(new ConstantPoolFake(new FakeFunctionHandleOperand(name)));
 
@@ -182,9 +178,58 @@ public class Function extends Value {
     }
 
     public void optimize(OptimizationLevel level) {
+        allocateRegisters();
+        sortAllocas();
+
         if (level == OptimizationLevel.NONE) {
             return;
         }
+
+        switch (level) {
+            case HIGH:
+                optimizeHigh();
+            case MEDIUM:
+                optimizeMedium();
+            case LOW:
+                optimizeLow();
+                break;
+
+            case SIZE:
+                optimizeSize();
+                break;
+        }
+    }
+
+    private void optimizeHigh() {
+
+    }
+
+    private void optimizeMedium() {
+
+    }
+
+    private void optimizeLow() {
+        Map<Integer, Integer> references = new HashMap<>();
+        for (Value value : values) {
+            for (int op : value.getOperands()) {
+                Integer i = references.get(op);
+                if (i != null) {
+                    references.put(id, op + 1);
+                } else {
+                    references.put(id, 1);
+                }
+            }
+        }
+
+        for (Value value : values) {
+            if (!references.containsKey(value.id)) {
+                System.out.println(value.id);
+            }
+        }
+    }
+
+    private void optimizeSize() {
+
     }
 
     @Override
@@ -275,7 +320,7 @@ public class Function extends Value {
                 "cyan", "magenta"
         };
 
-        try (FileWriter graphout = new FileWriter("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\ctir.dot", true)) {
+        try (FileWriter graphout = new FileWriter("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot", true)) {
             graphout.write("\n\nstrict graph {");
 
             while (!stack.empty()) {

@@ -25,7 +25,11 @@ public final class LoadInst extends Instruction {
         this.ptr = ptr.getId();
         this.name = name;
 
-        super.type = ((PointerType) (parent.getParent().getValue(this.ptr).getType())).getUnderlyingType();
+        if (ptr instanceof Argument) {
+            super.type = ptr.getType();
+        } else {
+            super.type = ((PointerType) (parent.getParent().getValue(this.ptr).getType())).getUnderlyingType();
+        }
     }
 
     @Override
@@ -59,7 +63,6 @@ public final class LoadInst extends Instruction {
         } else {
             Register reg = (Register) ptrOperand;
             Operand memory = new Memory(reg);
-
             values.add(new LodInstruction(Register.get(register), memory));
         }
 
