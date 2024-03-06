@@ -61,7 +61,7 @@ public final class CodeBuiltin extends AstNode {
     }
 
     @Override
-    public String toString() {
-        return "asm {\n" + asmCode + "\n}";
+    public String toString(int indentationLevel) {
+        return "(asm \"" + asmCode.replace("\n", "\\n") + "\")";
     }
 }

@@ -25,6 +25,11 @@ public abstract class Type {
         return name;
     }
 
+    @Override
+    public String toString() {
+        return name;
+    }
+
     private static final Map<String, Type> namedTypes = new HashMap<>();
 
     private static final List<Type> types = new ArrayList<>();
@@ -36,6 +41,8 @@ public abstract class Type {
         namedTypes.put("long", getIntegerType(64));
 
         namedTypes.put("void", getVoidType());
+
+        namedTypes.put("string", getStringType());
     }
 
     public static boolean exists(final String name) {
@@ -67,6 +74,17 @@ public abstract class Type {
         }
 
         types.add(new IntegerType(sizeInBits));
+        return types.get(types.size() - 1);
+    }
+
+    public static Type getStringType() {
+        for (Type type : types) {
+            if (type instanceof StringType) {
+                return type;
+            }
+        }
+
+        types.add(new StringType());
         return types.get(types.size() - 1);
     }
 

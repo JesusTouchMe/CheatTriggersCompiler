@@ -7,10 +7,7 @@ import cum.jesus.cts.asm.instruction.operand.Memory;
 import cum.jesus.cts.util.ImmediateVariant;
 import cum.jesus.cts.util.StaticList;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public final class Instruction {
     private OutputBuffer output;
@@ -20,7 +17,7 @@ public final class Instruction {
     private List<ImmediateVariant> immediate = new ArrayList<>();
     private List<String> string = new ArrayList<>();
     private Optional<Memory> memory = Optional.empty();
-    private Optional<Integer> constEntry = Optional.empty();
+    private List<Integer> constEntry = new ArrayList<>();
 
     Instruction(OutputBuffer output) {
         this.output = output;
@@ -71,7 +68,7 @@ public final class Instruction {
     }
 
     public Instruction constEntry(int constEntry) {
-        this.constEntry = Optional.of(constEntry);
+        this.constEntry.add(constEntry);
         return this;
     }
 
@@ -140,6 +137,10 @@ public final class Instruction {
             }
         }
 
+        Collections.reverse(immediate);
+        Collections.reverse(string);
+        Collections.reverse(constEntry);
+
         if (!immediate.isEmpty()) {
             for (ImmediateVariant imm : immediate) {
                 imm.writeToOutput(output); //TODO all
@@ -161,9 +162,11 @@ public final class Instruction {
             output.writeb((byte) memory.get().getReg().getId());
             output.writes(memory.get().getOffset());
         }
-        if (constEntry.isPresent()) {
-            output.writeb(Opcodes.CENT.getOpcode());
-            output.writes(constEntry.get().shortValue());
+        if (!constEntry.isEmpty()) {
+            for (int entry : constEntry) {
+                output.writeb(Opcodes.CENT.getOpcode());
+                output.writes((short) entry);
+            }
         }
 
         for (byte b : buffer) {

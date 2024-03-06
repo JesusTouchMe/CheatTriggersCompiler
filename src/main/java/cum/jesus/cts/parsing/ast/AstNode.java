@@ -11,8 +11,7 @@ public abstract class AstNode {
 
     public abstract Value emit(Module module, Builder builder, Environment scope);
 
-    @Override
-    public abstract String toString();
+    public abstract String toString(int indentationLevel);
 
     public Type getType() {
         return type;

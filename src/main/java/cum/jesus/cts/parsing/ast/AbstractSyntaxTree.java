@@ -27,7 +27,7 @@ public final class AbstractSyntaxTree {
 
     public void print(PrintStream stream) {
         for (AstNode node : nodes) {
-            stream.println(node.toString());
+            stream.println(node.toString(0));
         }
     }
 }

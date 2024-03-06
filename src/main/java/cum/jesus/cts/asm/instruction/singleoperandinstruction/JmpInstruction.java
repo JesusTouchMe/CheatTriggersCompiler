@@ -27,10 +27,10 @@ public final class JmpInstruction extends SingleOperandInstruction {
             int value = ((LabelOperand) operand).getValue(builder);
             builder.createInstruction()
                     .opcode(Opcodes.JMP)
-                    .operand(0, OperandSize.WORD, value - builder.getPosition() - 2)
+                    .operand(0, OperandSize.WORD, value - builder.getPosition())
                     .emit();
             if (value == -1) {
-                ((LabelOperand) operand).reloc(builder, OperandSize.WORD, -1);
+                ((LabelOperand) operand).reloc(builder, OperandSize.WORD, -4);
             }
         } else if (operand instanceof Register) {
             builder.createInstruction()

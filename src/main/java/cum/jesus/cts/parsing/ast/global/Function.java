@@ -1,8 +1,8 @@
 package cum.jesus.cts.parsing.ast.global;
 
-import cum.jesus.cts.ctir.ir.Builder;
 import cum.jesus.cts.ctir.Module;
 import cum.jesus.cts.ctir.ir.Block;
+import cum.jesus.cts.ctir.ir.Builder;
 import cum.jesus.cts.ctir.ir.Value;
 import cum.jesus.cts.ctir.ir.instruction.AllocaInst;
 import cum.jesus.cts.environment.Environment;
@@ -83,29 +83,49 @@ public final class Function extends AstNode {
     }
 
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder()
-                .append("func<")
-                .append(returnType.getName())
-                .append("> ")
-                .append(name)
-                .append('(');
+    public String toString(int indentationLevel) {
+        StringBuilder sb = new StringBuilder();
 
-        Iterator<FunctionArgument> it = args.iterator();
-        while (it.hasNext()) {
-            FunctionArgument arg = it.next();
+        for (int i = 0; i < indentationLevel; i++) {
+            sb.append("  ");
+        }
+
+        sb.append("\n\n(fn \"").append(type.toString()).append("\" ");
+        sb.append("\"").append(name).append("\"\n");
+
+        Iterator<FunctionArgument> fit = args.iterator();
+        while (fit.hasNext()) {
+            FunctionArgument arg = fit.next();
+
+            for (int i = 0; i < indentationLevel + 1; i++) {
+                sb.append("  ");
+            }
+
             sb.append(arg.toString());
-            if (it.hasNext()) {
-                sb.append(", ");
+
+            if (fit.hasNext()) {
+                sb.append("\n");
+            } else if (!body.isEmpty()) {
+                sb.append("\n");
             }
         }
-        sb.append(") {\n").append("    ");
 
-        for (AstNode node : body) {
-            sb.append(node.toString()).append("\n    ");
+        Iterator<AstNode> it = body.iterator();
+        while (it.hasNext()) {
+            AstNode node = it.next();
+
+            for (int i = 0; i < indentationLevel + 1; i++) {
+                sb.append("  ");
+            }
+
+            sb.append(node.toString(indentationLevel + 1));
+
+            if (it.hasNext()) {
+                sb.append("\n");
+            }
         }
-        sb.append('}');
 
+        sb.append(')');
         return sb.toString();
     }
 }

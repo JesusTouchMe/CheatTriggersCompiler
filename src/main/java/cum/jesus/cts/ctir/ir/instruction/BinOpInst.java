@@ -3,12 +3,10 @@ package cum.jesus.cts.ctir.ir.instruction;
 import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.operand.Register;
-import cum.jesus.cts.asm.instruction.threeoperandinstruction.AddInstruction;
-import cum.jesus.cts.asm.instruction.threeoperandinstruction.DivInstruction;
-import cum.jesus.cts.asm.instruction.threeoperandinstruction.MulInstruction;
-import cum.jesus.cts.asm.instruction.threeoperandinstruction.SubInstruction;
+import cum.jesus.cts.asm.instruction.threeoperandinstruction.*;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Value;
+import cum.jesus.cts.type.Type;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -37,7 +35,28 @@ public final class BinOpInst extends Instruction {
             case DIV:
                 super.type = left.getType();
                 break;
+
+            case EQ:
+            case NE:
+            case LT:
+            case GT:
+            case LTE:
+            case GTE:
+                super.type = Type.getIntegerType(1); // a boolean is either 1 or 0 so a single bit should be enough right?
+                break;
         }
+    }
+
+    public int getLeft() {
+        return left;
+    }
+
+    public Operator getOp() {
+        return op;
+    }
+
+    public int getRight() {
+        return right;
     }
 
     @Override
@@ -114,12 +133,97 @@ public final class BinOpInst extends Instruction {
                     emittedValue = lhs;
                 }
             } break;
+
+            case EQ: {
+                Operand lhs = parent.getEmittedValue(left);
+                Operand rhs = parent.getEmittedValue(right);
+
+                if (color != -1) {
+                    values.add(new CmpEqInstruction(Register.get(register), lhs, rhs));
+                    emittedValue = Register.get(register);
+                } else {
+                    values.add(new CmpEqInstruction(lhs.clone(), lhs.clone(), rhs));
+                    emittedValue = lhs;
+                }
+            } break;
+
+            case NE: {
+                Operand lhs = parent.getEmittedValue(left);
+                Operand rhs = parent.getEmittedValue(right);
+
+                if (color != -1) {
+                    values.add(new CmpNeInstruction(Register.get(register), lhs, rhs));
+                    emittedValue = Register.get(register);
+                } else {
+                    values.add(new CmpNeInstruction(lhs.clone(), lhs.clone(), rhs));
+                    emittedValue = lhs;
+                }
+            } break;
+
+            case LT: {
+                Operand lhs = parent.getEmittedValue(left);
+                Operand rhs = parent.getEmittedValue(right);
+
+                if (color != -1) {
+                    values.add(new CmpLtInstruction(Register.get(register), lhs, rhs));
+                    emittedValue = Register.get(register);
+                } else {
+                    values.add(new CmpGtInstruction(lhs.clone(), lhs.clone(), rhs));
+                    emittedValue = lhs;
+                }
+            } break;
+
+            case GT: {
+                Operand lhs = parent.getEmittedValue(left);
+                Operand rhs = parent.getEmittedValue(right);
+
+                if (color != -1) {
+                    values.add(new CmpGtInstruction(Register.get(register), lhs, rhs));
+                    emittedValue = Register.get(register);
+                } else {
+                    values.add(new CmpGtInstruction(lhs.clone(), lhs.clone(), rhs));
+                    emittedValue = lhs;
+                }
+            } break;
+
+            case LTE: {
+                Operand lhs = parent.getEmittedValue(left);
+                Operand rhs = parent.getEmittedValue(right);
+
+                if (color != -1) {
+                    values.add(new CmpLteInstruction(Register.get(register), lhs, rhs));
+                    emittedValue = Register.get(register);
+                } else {
+                    values.add(new CmpLteInstruction(lhs.clone(), lhs.clone(), rhs));
+                    emittedValue = lhs;
+                }
+            } break;
+
+            case GTE: {
+                Operand lhs = parent.getEmittedValue(left);
+                Operand rhs = parent.getEmittedValue(right);
+
+                if (color != -1) {
+                    values.add(new CmpGteInstruction(Register.get(register), lhs, rhs));
+                    emittedValue = Register.get(register);
+                } else {
+                    values.add(new CmpGteInstruction(lhs.clone(), lhs.clone(), rhs));
+                    emittedValue = lhs;
+                }
+            } break;
+
+
         }
     }
 
     public enum Operator {
         ADD("add"), SUB("sub"),
-        MUL("mul"), DIV("div");
+        MUL("mul"), DIV("div"),
+        EQ("cmp eq"), NE("cmp ne"),
+        LT("cmp lt"), GT("cmp gt"),
+        LTE("cmp lte"), GTE("cmp gte"),
+
+        ;
 
         private final String str;
 

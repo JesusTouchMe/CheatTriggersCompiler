@@ -38,7 +38,15 @@ public final class InlineAsm extends Value {
 
     @Override
     public List<Integer> getOperands() {
-        return params;
+        List<Integer> operands = new ArrayList<>();
+
+        for (int param : params) {
+            List<Integer> paramOperands = parent.getParent().getValue(param).getOperands();
+            operands.addAll(paramOperands);
+            operands.add(param);
+        }
+
+        return operands;
     }
 
     @Override

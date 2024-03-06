@@ -12,17 +12,21 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public final class Module {
     private String name;
     private List<Function> functions;
+    private Map<String, Integer> strings;
 
     public int constPoolOffset = 1;
 
     public Module(String name) {
         this.name = name;
         this.functions = new ArrayList<>();
+        this.strings = new HashMap<>();
     }
 
     public String getName() {
@@ -61,6 +65,23 @@ public final class Module {
 
     public Operand getFunctionEmittedValue(int id) {
         return functions.get(id).getEmittedValue();
+    }
+
+    public Map<String, Integer> getStrings() {
+        return strings;
+    }
+
+    public boolean hasString(String string) {
+        return strings.containsKey(string);
+    }
+
+    public int getString(String string) {
+        return strings.getOrDefault(string, -1);
+    }
+
+    public int insertString(String string) {
+        strings.put(string, constPoolOffset++);
+        return strings.get(string);
     }
 
     public void print(PrintStream stream) {

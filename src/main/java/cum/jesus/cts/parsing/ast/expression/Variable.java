@@ -45,6 +45,11 @@ public final class Variable extends AstNode {
     }
 
     @Override
+    public String toString(int indentationLevel) {
+        return "(var \"" + type.toString() + "\" \"" + name + "\")";
+    }
+
+    @Override
     public String toString() {
         return name;
     }

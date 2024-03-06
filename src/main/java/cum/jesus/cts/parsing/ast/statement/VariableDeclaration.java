@@ -34,7 +34,11 @@ public final class VariableDeclaration extends AstNode {
     }
 
     @Override
-    public String toString() {
-        return null;
+    public String toString(int indentationLevel) {
+        if (value == null) {
+            return "(decl \"" + type.toString() + "\" \"" + name + "\")";
+        } else {
+            return "(def \"" + type.toString() + "\" \"" + name + "\" " + value.toString(indentationLevel) + ')';
+        }
     }
 }

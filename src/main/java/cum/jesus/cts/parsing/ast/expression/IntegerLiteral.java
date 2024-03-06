@@ -30,7 +30,7 @@ public final class IntegerLiteral extends AstNode {
     }
 
     @Override
-    public String toString() {
-        return String.valueOf(value);
+    public String toString(int indentationLevel) {
+        return "(int \"" + type.toString() + "\" " + value + ")";
     }
 }

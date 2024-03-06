@@ -11,6 +11,8 @@ public final class Lexer {
     private static final Map<String, TokenType> keywords = new HashMap<String, TokenType>() {{
        put("func", TokenType.KEYWORD_FUNC);
        put("return", TokenType.KEYWORD_RETURN);
+       put("if", TokenType.KEYWORD_IF);
+       put("else", TokenType.KEYWORD_ELSE);
     }};
 
     private static final Map<String, TokenType> builtins = new HashMap<String, TokenType>() {{
@@ -93,8 +95,18 @@ public final class Lexer {
                 return Optional.of(new Token(TokenType.RIGHT_BRACE, "}"));
 
             case '<':
+                if (peek(1) == '=') {
+                    consume();
+                    return Optional.of(new Token(TokenType.LEFT_ANGLE_BRACKET_EQUALS, "<="));
+                }
+
                 return Optional.of(new Token(TokenType.LEFT_ANGLE_BRACKET, "<"));
             case '>':
+                if (peek(1) == '=') {
+                    consume();
+                    return Optional.of(new Token(TokenType.RIGHT_ANGLE_BRACKET_EQUALS, ">="));
+                }
+
                 return Optional.of(new Token(TokenType.RIGHT_ANGLE_BRACKET, ">"));
 
             case ';':
@@ -124,8 +136,20 @@ public final class Lexer {
                 }
 
                 return Optional.of(new Token(TokenType.SLASH, "/"));
+            case '!':
+                if (peek(1) == '=') {
+                    consume();
+                    return Optional.of(new Token(TokenType.BANG_EQUALS, "!="));
+                }
+
+                return Optional.of(new Token(TokenType.BANG, "!"));
 
             case '=':
+                if (peek(1) == '=') {
+                    consume();
+                    return Optional.of(new Token(TokenType.DOUBLE_EQUALS, "<="));
+                }
+
                 return Optional.of(new Token(TokenType.EQUALS, "="));
 
             case '"': {

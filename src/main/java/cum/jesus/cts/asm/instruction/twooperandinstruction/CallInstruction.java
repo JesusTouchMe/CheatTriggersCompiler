@@ -1,12 +1,14 @@
 package cum.jesus.cts.asm.instruction.twooperandinstruction;
 
-import cum.jesus.cts.asm.codegen.ConstPoolEntry;
 import cum.jesus.cts.asm.codegen.Opcodes;
 import cum.jesus.cts.asm.codegen.builder.Instruction;
 import cum.jesus.cts.asm.codegen.builder.OpcodeBuilder;
 import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.TwoOperandInstruction;
-import cum.jesus.cts.asm.instruction.operand.*;
+import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
+import cum.jesus.cts.asm.instruction.operand.Memory;
+import cum.jesus.cts.asm.instruction.operand.Register;
+import cum.jesus.cts.asm.instruction.operand.StringOperand;
 
 import java.io.PrintStream;
 
@@ -44,5 +46,7 @@ public final class CallInstruction extends TwoOperandInstruction {
         } else if (right instanceof StringOperand) {
             inst.string(((StringOperand) right).getText());
         }
+
+        inst.emit();
     }
 }

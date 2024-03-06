@@ -1,8 +1,11 @@
 package cum.jesus.cts.ctir.ir;
 
 import cum.jesus.cts.ctir.ir.constant.ConstantInt;
+import cum.jesus.cts.ctir.ir.constant.ConstantString;
 import cum.jesus.cts.ctir.ir.instruction.*;
 import cum.jesus.cts.ctir.ir.misc.InlineAsm;
+import cum.jesus.cts.ctir.ir.misc.SaveStackOffset;
+import cum.jesus.cts.ctir.ir.misc.SetStackOffset;
 import cum.jesus.cts.type.Type;
 
 import java.util.List;
@@ -164,6 +167,136 @@ public final class Builder {
         return createDiv(left, right, "");
     }
 
+    public BinOpInst createCmpEq(Value left, Value right, String name) {
+        int id = insertPoint.getParent().getValueCount();
+        if (name.isEmpty()) {
+            name = String.valueOf(id);
+        }
+
+        BinOpInst binOp = new BinOpInst(insertPoint, id, left, BinOpInst.Operator.EQ, right, name);
+
+        insertPoint.insertValue(binOp);
+        insertPoint.getParent().addValue(binOp);
+
+        return binOp;
+    }
+
+    public BinOpInst createCmpEq(Value left, Value right) {
+        return createCmpEq(left, right, "");
+    }
+
+    public BinOpInst createCmpNe(Value left, Value right, String name) {
+        int id = insertPoint.getParent().getValueCount();
+        if (name.isEmpty()) {
+            name = String.valueOf(id);
+        }
+
+        BinOpInst binOp = new BinOpInst(insertPoint, id, left, BinOpInst.Operator.NE, right, name);
+
+        insertPoint.insertValue(binOp);
+        insertPoint.getParent().addValue(binOp);
+
+        return binOp;
+    }
+
+    public BinOpInst createCmpNe(Value left, Value right) {
+        return createCmpNe(left, right, "");
+    }
+
+    public BinOpInst createCmpLt(Value left, Value right, String name) {
+        int id = insertPoint.getParent().getValueCount();
+        if (name.isEmpty()) {
+            name = String.valueOf(id);
+        }
+
+        BinOpInst binOp = new BinOpInst(insertPoint, id, left, BinOpInst.Operator.LT, right, name);
+
+        insertPoint.insertValue(binOp);
+        insertPoint.getParent().addValue(binOp);
+
+        return binOp;
+    }
+
+    public BinOpInst createCmpLt(Value left, Value right) {
+        return createCmpLt(left, right, "");
+    }
+
+    public BinOpInst createCmpGt(Value left, Value right, String name) {
+        int id = insertPoint.getParent().getValueCount();
+        if (name.isEmpty()) {
+            name = String.valueOf(id);
+        }
+
+        BinOpInst binOp = new BinOpInst(insertPoint, id, left, BinOpInst.Operator.GT, right, name);
+
+        insertPoint.insertValue(binOp);
+        insertPoint.getParent().addValue(binOp);
+
+        return binOp;
+    }
+
+    public BinOpInst createCmpGt(Value left, Value right) {
+        return createCmpGt(left, right, "");
+    }
+
+    public BinOpInst createCmpLte(Value left, Value right, String name) {
+        int id = insertPoint.getParent().getValueCount();
+        if (name.isEmpty()) {
+            name = String.valueOf(id);
+        }
+
+        BinOpInst binOp = new BinOpInst(insertPoint, id, left, BinOpInst.Operator.LTE, right, name);
+
+        insertPoint.insertValue(binOp);
+        insertPoint.getParent().addValue(binOp);
+
+        return binOp;
+    }
+
+    public BinOpInst createCmpLte(Value left, Value right) {
+        return createCmpLte(left, right, "");
+    }
+
+    public BinOpInst createCmpGte(Value left, Value right, String name) {
+        int id = insertPoint.getParent().getValueCount();
+        if (name.isEmpty()) {
+            name = String.valueOf(id);
+        }
+
+        BinOpInst binOp = new BinOpInst(insertPoint, id, left, BinOpInst.Operator.GTE, right, name);
+
+        insertPoint.insertValue(binOp);
+        insertPoint.getParent().addValue(binOp);
+
+        return binOp;
+    }
+
+    public BinOpInst createCmpGte(Value left, Value right) {
+        return createCmpGte(left, right, "");
+    }
+
+    public BranchInst createBr(Block destination) {
+        int id = insertPoint.getParent().getValueCount();
+
+        BranchInst branch = new BranchInst(insertPoint, id, destination);
+
+        insertPoint.insertValue(branch);
+        insertPoint.getParent().addValue(branch);
+
+        return branch;
+    }
+
+    public BranchInst createCondBr(Value condition, Block trueBranch, Block falseBranch) {
+        int id = insertPoint.getParent().getValueCount();
+
+        BranchInst branch = new BranchInst(insertPoint, id, condition, trueBranch, falseBranch);
+
+        insertPoint.insertValue(branch);
+        insertPoint.getParent().addValue(branch);
+
+        return branch;
+    }
+
     public UnOpInst createPos(Value operand, String name) {
         int id = insertPoint.getParent().getValueCount();
         if (name.isEmpty()) {
@@ -218,6 +351,24 @@ public final class Builder {
         return createConstantInt(value, type, "");
     }
 
+    public ConstantString createConstantString(String value, Type type, String name) {
+        int id = insertPoint.getParent().getValueCount();
+        if (name.isEmpty()) {
+            name = String.valueOf(id);
+        }
+
+        ConstantString constant = new ConstantString(insertPoint, id, value, type, name);
+
+        insertPoint.insertValue(constant);
+        insertPoint.getParent().addValue(constant);
+
+        return constant;
+    }
+
+    public ConstantString createConstantString(String value, Type type) {
+        return createConstantString(value, type, "");
+    }
+
     public InlineAsm createInlineAsm(String asmCode, List<Value> params) {
         int id = insertPoint.getParent().getValueCount();
         InlineAsm asm = new InlineAsm(insertPoint, id, asmCode, params);
@@ -226,5 +377,25 @@ public final class Builder {
         insertPoint.getParent().addValue(asm);
 
         return asm;
+    }
+
+    public SaveStackOffset saveStackOffset() {
+        int id = insertPoint.getParent().getValueCount();
+        SaveStackOffset save = new SaveStackOffset(insertPoint, id);
+
+        insertPoint.insertValue(save);
+        insertPoint.getParent().addValue(save);
+
+        return save;
+    }
+
+    public SetStackOffset setStackOffset() {
+        int id = insertPoint.getParent().getValueCount();
+        SetStackOffset set = new SetStackOffset(insertPoint, id);
+
+        insertPoint.insertValue(set);
+        insertPoint.getParent().addValue(set);
+
+        return set;
     }
 }

@@ -31,13 +31,32 @@ public final class BinaryExpression extends AstNode {
             case SLASH:
                 this.operator = Operator.DIV;
                 break;
+
             case EQUALS:
                 this.operator = Operator.ASSIGN;
                 break;
 
-            default:
-                // TODO: error here
+            case DOUBLE_EQUALS:
+                this.operator = Operator.EQUAL;
                 break;
+            case BANG_EQUALS:
+                this.operator = Operator.NOT_EQUAL;
+                break;
+            case LEFT_ANGLE_BRACKET:
+                this.operator = Operator.LESS;
+                break;
+            case RIGHT_ANGLE_BRACKET:
+                this.operator = Operator.GREATER;
+                break;
+            case LEFT_ANGLE_BRACKET_EQUALS:
+                this.operator = Operator.LESS_EQUAL;
+                break;
+            case RIGHT_ANGLE_BRACKET_EQUALS:
+                this.operator = Operator.GREATER_EQUAL;
+                break;
+
+            default:
+                throw new RuntimeException("Unknown binary operator");
         }
 
         type = left.getType();
@@ -62,20 +81,52 @@ public final class BinaryExpression extends AstNode {
                 Instruction instruction = (Instruction) leftValue;
                 instruction.eraseFromParent();
                 return builder.createStore(Module.getPointerOperand(leftValue), rightValue);
+
+            case EQUAL:
+                return builder.createCmpEq(leftValue, rightValue);
+            case NOT_EQUAL:
+                return builder.createCmpNe(leftValue, rightValue);
+            case LESS:
+                return builder.createCmpLt(leftValue, rightValue);
+            case GREATER:
+                return builder.createCmpGt(leftValue, rightValue);
+            case LESS_EQUAL:
+                return builder.createCmpLte(leftValue, rightValue);
+            case GREATER_EQUAL:
+                return builder.createCmpGte(leftValue, rightValue);
         }
 
         throw UnreachableStatementException.INSTANCE;
     }
 
     @Override
-    public String toString() {
-        return '(' + left.toString() + ' ' + operator.toString() + ' ' + right.toString() + ')';
+    public String toString(int indentationLevel) {
+        StringBuilder sb = new StringBuilder();
+        sb.append('(').append(operator.toString()).append(" \"").append(type.toString()).append("\"\n");
+
+        for (int i = 0; i < indentationLevel + 1; i++) {
+            sb.append("  ");
+        }
+
+        sb.append(left.toString(indentationLevel + 1)).append('\n');
+
+        for (int i = 0; i < indentationLevel + 1; i++) {
+            sb.append("  ");
+        }
+
+        sb.append(right.toString(indentationLevel + 1)).append(')');
+        return sb.toString();
     }
 
     public enum Operator {
-        ADD("+"), SUB("-"),
-        MUL("*"), DIV("/"),
-        ASSIGN("=");
+        ADD("add"), SUB("sub"),
+        MUL("mul"), DIV("div"),
+        ASSIGN("assign"),
+        EQUAL("eq"), NOT_EQUAL("ne"),
+        LESS("lt"), GREATER("gt"),
+        LESS_EQUAL("lte"), GREATER_EQUAL("gte"),
+
+        ;
 
         private String str;
         Operator(String str) {

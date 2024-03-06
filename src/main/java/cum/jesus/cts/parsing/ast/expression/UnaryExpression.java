@@ -45,38 +45,32 @@ public final class UnaryExpression extends AstNode {
     }
 
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder().append('(');
-        if (!operator.isAfter()) {
-            sb.append(operator.toString());
+    public String toString(int indentationLevel) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("(").append(operator.toString()).append(" \"").append(type.toString()).append("\"\n");
+
+        for (int i = 0; i < indentationLevel + 1; i++) {
+            sb.append("  ");
         }
-        sb.append(operand.toString());
-        if (operator.isAfter()) {
-            sb.append(operator.toString());
-        }
+
+        sb.append(operand.toString(indentationLevel + 1));
         sb.append(')');
+
         return sb.toString();
     }
 
     public enum Operator {
-        POSITIZE("+", false),
-        NEGATE("-", false);
+        POSITIZE("pos"),
+        NEGATE("neg");
 
         private String str;
-        // true means put string before, false means put string after
-        private boolean after;
-        Operator(String str, boolean after) {
+        Operator(String str) {
             this.str = str;
-            this.after = after;
         }
 
         @Override
         public String toString() {
             return str;
-        }
-
-        public boolean isAfter() {
-            return after;
         }
     }
 }

@@ -21,6 +21,6 @@ public final class FunctionArgument {
 
     @Override
     public String toString() {
-        return type.getName() + ' ' + name;
+        return "(arg \"" + type.toString() + "\" \"" + name + "\")";
     }
 }

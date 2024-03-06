@@ -139,7 +139,7 @@ public final class OutputBuffer {
         stream.write(0);
         stream.write(0);
 
-        stream.write((byte) constantPool.size()); // simply to get faster allocations by hinting it at how many elements it might need. this still doesn't prevent it from resizing in case of over 255 elements
+        stream.write((byte) Math.min(0xFF, constantPool.size())); // simply to get faster allocations by hinting it at how many elements it might need. this still doesn't prevent it from resizing in case of over 255 elements
         for (ConstPoolEntry entry : constantPool) {
             entry.writeTo(stream);
         }

@@ -14,6 +14,8 @@ import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.Module;
 import cum.jesus.cts.ctir.OptimizationLevel;
 import cum.jesus.cts.ctir.ir.instruction.AllocaInst;
+import cum.jesus.cts.ctir.ir.misc.SetStackOffset;
+import cum.jesus.cts.ctir.ir.misc.SaveStackOffset;
 import cum.jesus.cts.type.FunctionType;
 import cum.jesus.cts.type.Type;
 import cum.jesus.cts.util.Pair;
@@ -30,7 +32,7 @@ public class Function extends Value {
     private List<Integer> args;
 
     public int instructionCount = 0;
-    private int totalStackOffset = 0;
+    public int totalStackOffset = 0;
 
     private Function(FunctionType type, Module module, String name) {
         super(module, module.getFunctions().size());
@@ -78,6 +80,10 @@ public class Function extends Value {
 
     public Value getValue(int index) {
         return values.get(index);
+    }
+
+    public void setValue(int index, Value value) {
+        values.set(index, value);
     }
 
     public void insertBlock(Block block) {
@@ -201,35 +207,29 @@ public class Function extends Value {
     }
 
     private void optimizeHigh() {
-
+        for (Block block : blocks) {
+            block.optimizeHigh();
+        }
     }
 
     private void optimizeMedium() {
-
+        for (Block block : blocks) {
+            block.optimizeMedium();
+        }
     }
 
     private void optimizeLow() {
-        Map<Integer, Integer> references = new HashMap<>();
-        for (Value value : values) {
-            for (int op : value.getOperands()) {
-                Integer i = references.get(op);
-                if (i != null) {
-                    references.put(id, op + 1);
-                } else {
-                    references.put(id, 1);
-                }
-            }
-        }
-
-        for (Value value : values) {
-            if (!references.containsKey(value.id)) {
-                System.out.println(value.id);
-            }
+        for (Block block : blocks) {
+            block.optimizeLow();
         }
     }
 
     private void optimizeSize() {
+        optimizeLow(); // TODO possibly change later?
 
+        for (Block block : blocks) {
+            block.optimizeSize();
+        }
     }
 
     @Override
@@ -355,12 +355,12 @@ public class Function extends Value {
     }
 
     private void sortAllocas() {
-        List<AllocaInst> temp = new ArrayList<>();
+        List<Value> temp = new ArrayList<>();
 
         for (Block block : blocks) {
             for (int instruction : block.getInstructions()) {
-                if (values.get(instruction) instanceof AllocaInst) {
-                    temp.add((AllocaInst) values.get(instruction));
+                if (values.get(instruction) instanceof AllocaInst | values.get(instruction) instanceof SaveStackOffset || values.get(instruction) instanceof SetStackOffset) {
+                    temp.add(values.get(instruction));
                 }
             }
         }
@@ -368,12 +368,22 @@ public class Function extends Value {
         //temp.sort((lhs, rhs) -> Integer.compare(rhs.getAllocatedType().getSize(), lhs.getAllocatedType().getSize()));
 
         int offset = 0;
-        for (AllocaInst alloca : temp) {
-            offset += 1; // an alloca is 1 value aka 1 size cuz vm works in values not bytes
-            alloca.setStackOffset(allocaSignature, (short) offset);
+        int maxOffset = 0;
+        Stack<Integer> savedOffset = new Stack<>();
+        for (Value alloca : temp) {
+            if (alloca instanceof SaveStackOffset) {
+                savedOffset.push(offset);
+                maxOffset = Math.max(maxOffset, offset);
+            } else if (alloca instanceof SetStackOffset) {
+                maxOffset = Math.max(maxOffset, offset);
+                offset = savedOffset.pop();
+            } else {
+                offset += 1; // an alloca is 1 value aka 1 size cuz vm works in values not bytes
+                ((AllocaInst) alloca).setStackOffset(allocaSignature, (short) offset);
+            }
         }
 
-        totalStackOffset = offset;
+        totalStackOffset = Math.max(offset, maxOffset);
     }
 
     public static final class AllocaSignature {

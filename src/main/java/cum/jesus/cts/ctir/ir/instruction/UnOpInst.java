@@ -57,7 +57,7 @@ public final class UnOpInst extends Instruction {
         Operand operand = parent.getEmittedValue(this.operand);
 
         switch (op) {
-            case POS:
+            case POS: // genuinely who the fuck needs this to be the real instruction it just does pointless arithmetic on the vm level and moves values. mov is WAY more efficient at that
                 if (color != -1) {
                     values.add(new MovInstruction(Register.get(register), operand));
                     emittedValue = Register.get(register);

@@ -1,9 +1,13 @@
 package cum.jesus.cts.ctir.ir.constant;
 
 import cum.jesus.cts.asm.instruction.AsmValue;
+import cum.jesus.cts.asm.instruction.fakes.ConstantPoolFake;
+import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
+import cum.jesus.cts.asm.instruction.operand.Register;
+import cum.jesus.cts.asm.instruction.operand.StringOperand;
+import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.type.Type;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -48,6 +52,16 @@ public final class ConstantString extends Constant {
 
     @Override
     public void emit(List<AsmValue> values) {
-        throw new NotImplementedException();
+        if (!module.hasString(value)) {
+            values.add(new ConstantPoolFake(new StringOperand(value)));
+            module.insertString(value);
+        }
+
+        if (!register.isEmpty()) {
+            values.add(new MovInstruction(Register.get(register), new ConstPoolEntryOperand(module.getString(value))));
+            emittedValue = Register.get(register);
+        } else {
+            emittedValue = new ConstPoolEntryOperand(module.getString(value));
+        }
     }
 }

@@ -52,13 +52,12 @@ public class Main {
         Module module = new Module(input.getName());
         Builder builder = new Builder();
 
+        ast.print(System.out);
         ast.emit(module, builder, globalScope);
+
         module.print(System.out);
-        System.out.println();
         System.out.println();
         module.optimize(OptimizationLevel.HIGH);
-        module.print(System.out);
-        System.out.println();
 
         File output = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.ct");
         //File output = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\test.ct");

@@ -32,19 +32,22 @@ public final class CallExpression extends AstNode {
     }
 
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder().append(callee.toString()).append('(');
+    public String toString(int indentationLevel) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("(call \"").append(callee.toString()).append("\" (list ");
 
         Iterator<AstNode> it = params.iterator();
         while (it.hasNext()) {
-            AstNode node = it.next();
-            sb.append(node.toString());
+            AstNode param = it.next();
+
+            sb.append(param.toString(indentationLevel + 1));
+
             if (it.hasNext()) {
                 sb.append(", ");
             }
         }
-        sb.append(')');
 
+        sb.append("))");
         return sb.toString();
     }
 }

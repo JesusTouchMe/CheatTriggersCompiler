@@ -25,10 +25,10 @@ public final class ReturnStatement extends AstNode {
     }
 
     @Override
-    public String toString() {
+    public String toString(int indentationLevel) {
         if (value == null) {
-            return "return";
+            return "(return \"void\")";
         }
-        return "return " + value;
+        return "(return \"" + type.toString() + "\" " + value.toString(indentationLevel) + ')';
     }
 }

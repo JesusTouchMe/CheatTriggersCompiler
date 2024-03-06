@@ -6,8 +6,8 @@ import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
 import cum.jesus.cts.asm.instruction.operand.Immediate;
 import cum.jesus.cts.asm.instruction.operand.Register;
 import cum.jesus.cts.asm.instruction.operand.StringOperand;
-import cum.jesus.cts.asm.instruction.twooperandinstruction.CallInstruction;
 import cum.jesus.cts.asm.instruction.singleoperandinstruction.IntInstruction;
+import cum.jesus.cts.asm.instruction.twooperandinstruction.CallInstruction;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 
 import java.io.PrintStream;

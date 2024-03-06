@@ -4,7 +4,7 @@ import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Label;
 import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.operand.LabelOperand;
-import cum.jesus.cts.ctir.OptimizationLevel;
+import cum.jesus.cts.ctir.ir.instruction.BinOpInst;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -103,10 +103,29 @@ public final class Block extends Value {
         }
     }
 
-    public void optimize(OptimizationLevel level) {
-        if (level == OptimizationLevel.NONE) {
-            return;
+    public void optimizeLow() {
+        for (int value : values) {
+            if (parent.getValue(value) instanceof BinOpInst) {
+                BinOpInst binOpInst = (BinOpInst) parent.getValue(value);
+                BinOpInst tmp = new BinOpInst(this, value, parent.getValue(binOpInst.getLeft()), BinOpInst.Operator.SUB, parent.getValue(binOpInst.getRight()), String.valueOf(value));
+                tmp.color = binOpInst.color;
+                tmp.register = binOpInst.register;
+                tmp.edges = binOpInst.edges;
+                parent.setValue(value, tmp);
+            }
         }
+    }
+
+    public void optimizeMedium() {
+
+    }
+
+    public void optimizeHigh() {
+
+    }
+
+    public void optimizeSize() {
+
     }
 
     @Override

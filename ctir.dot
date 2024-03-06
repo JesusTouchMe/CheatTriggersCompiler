@@ -5,8 +5,23 @@ strict graph {
 }
 
 strict graph {
-	N12 [color=purple]
-	N8 [color=green]
+	N5 [color=green]
+	N3 [color=green]
+	N0 [color=green]
+}
+
+strict graph {
+	N17 [color=purple]
+	N15 -- N14
+	N15 [color=red]
+	N14 -- N13
+	N14 -- N15
+	N14 [color=blue]
+	N13 -- N12
+	N13 -- N14
+	N13 [color=red]
+	N12 -- N13
+	N12 [color=blue]
 	N1 -- N0
 	N1 [color=yellow]
 	N0 -- N1

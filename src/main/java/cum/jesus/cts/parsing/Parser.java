@@ -10,6 +10,8 @@ import cum.jesus.cts.parsing.ast.builtin.CodeBuiltin;
 import cum.jesus.cts.parsing.ast.expression.*;
 import cum.jesus.cts.parsing.ast.global.Function;
 import cum.jesus.cts.parsing.ast.global.FunctionArgument;
+import cum.jesus.cts.parsing.ast.statement.CompoundStatement;
+import cum.jesus.cts.parsing.ast.statement.IfStatement;
 import cum.jesus.cts.parsing.ast.statement.ReturnStatement;
 import cum.jesus.cts.parsing.ast.statement.VariableDeclaration;
 import cum.jesus.cts.type.Type;
@@ -50,6 +52,14 @@ public final class Parser {
             case PLUS:
             case MINUS:
                 return 35;
+
+            case DOUBLE_EQUALS:
+            case BANG_EQUALS:
+            case LEFT_ANGLE_BRACKET:
+            case RIGHT_ANGLE_BRACKET:
+            case LEFT_ANGLE_BRACKET_EQUALS:
+            case RIGHT_ANGLE_BRACKET_EQUALS:
+                return 25;
 
             case EQUALS:
                 return 10;
@@ -124,6 +134,12 @@ public final class Parser {
 
             case TYPE:
                 return parseVariableDeclaration();
+
+            case KEYWORD_IF:
+                return parseIfStatement();
+
+            case LEFT_BRACE:
+                return parseCompoundStatement();
 
             case IDENTIFIER:
                 return parseVariable();
@@ -253,6 +269,47 @@ public final class Parser {
 
         AstNode initValue = expr();
         return new VariableDeclaration(type, name, initValue);
+    }
+
+    private AstNode parseIfStatement() {
+        consume();
+
+        AstNode condition = expr();
+        AstNode body = expr();
+        AstNode elseBody = null;
+
+        if (peek(1).getType() == TokenType.KEYWORD_ELSE) {
+            expect(TokenType.SEMICOLON);
+            consume();
+
+            consume(); // else
+
+            elseBody = expr();
+        }
+
+        return new IfStatement(condition, body, elseBody);
+    }
+
+    private AstNode parseCompoundStatement() {
+        consume();
+
+        Environment outer = scope;
+        Environment scope = new Environment(outer);
+        this.scope = scope;
+
+        List<AstNode> body = new ArrayList<>();
+        while (current().getType() != TokenType.RIGHT_BRACE) {
+            body.add(expr());
+            expect(TokenType.SEMICOLON);
+            consume();
+        }
+        consume();
+
+        this.scope = outer;
+
+        tokens.add(pos, new Token(TokenType.SEMICOLON, ";"));
+
+        return new CompoundStatement(body, scope);
     }
 
     private AstNode parseVariable() {
