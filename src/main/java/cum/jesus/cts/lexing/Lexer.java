@@ -9,14 +9,15 @@ public final class Lexer {
     private int pos = 0;
 
     private static final Map<String, TokenType> keywords = new HashMap<String, TokenType>() {{
-       put("func", TokenType.KEYWORD_FUNC);
-       put("return", TokenType.KEYWORD_RETURN);
-       put("if", TokenType.KEYWORD_IF);
-       put("else", TokenType.KEYWORD_ELSE);
+        put("native", TokenType.KEYWORD_NATIVE);
+        put("func", TokenType.KEYWORD_FUNC);
+        put("return", TokenType.KEYWORD_RETURN);
+        put("if", TokenType.KEYWORD_IF);
+        put("else", TokenType.KEYWORD_ELSE);
     }};
 
     private static final Map<String, TokenType> builtins = new HashMap<String, TokenType>() {{
-       put("_code", TokenType.BUILTIN_CODE);
+        put("_code", TokenType.BUILTIN_CODE);
     }};
 
     public Lexer(String text) {

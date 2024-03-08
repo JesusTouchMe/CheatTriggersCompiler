@@ -23,6 +23,7 @@ public enum TokenType {
 
     EQUALS, DOUBLE_EQUALS,
 
+    KEYWORD_NATIVE,
     KEYWORD_FUNC,
     KEYWORD_RETURN,
 

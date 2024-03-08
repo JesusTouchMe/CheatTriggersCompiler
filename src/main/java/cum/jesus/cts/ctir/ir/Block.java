@@ -104,14 +104,10 @@ public final class Block extends Value {
     }
 
     public void optimizeLow() {
-        for (int value : values) {
+        for (Iterator<Integer> it = values.iterator(); it.hasNext(); ) {
+            int value = it.next();
+
             if (parent.getValue(value) instanceof BinOpInst) {
-                BinOpInst binOpInst = (BinOpInst) parent.getValue(value);
-                BinOpInst tmp = new BinOpInst(this, value, parent.getValue(binOpInst.getLeft()), BinOpInst.Operator.SUB, parent.getValue(binOpInst.getRight()), String.valueOf(value));
-                tmp.color = binOpInst.color;
-                tmp.register = binOpInst.register;
-                tmp.edges = binOpInst.edges;
-                parent.setValue(value, tmp);
             }
         }
     }

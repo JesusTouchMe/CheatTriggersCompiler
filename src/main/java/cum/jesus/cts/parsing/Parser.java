@@ -10,6 +10,7 @@ import cum.jesus.cts.parsing.ast.builtin.CodeBuiltin;
 import cum.jesus.cts.parsing.ast.expression.*;
 import cum.jesus.cts.parsing.ast.global.Function;
 import cum.jesus.cts.parsing.ast.global.FunctionArgument;
+import cum.jesus.cts.parsing.ast.global.NativeFunction;
 import cum.jesus.cts.parsing.ast.statement.CompoundStatement;
 import cum.jesus.cts.parsing.ast.statement.IfStatement;
 import cum.jesus.cts.parsing.ast.statement.ReturnStatement;
@@ -87,6 +88,8 @@ public final class Parser {
                 expect(TokenType.SEMICOLON);
                 consume();
                 return variableDeclaration;
+            case KEYWORD_NATIVE:
+                return parseNative();
             case KEYWORD_FUNC:
                 return parseFunction();
 
@@ -239,6 +242,46 @@ public final class Parser {
         scope = outer;
 
         return new Function(type, name, args, body, functionScope);
+    }
+
+    private AstNode parseNative() {
+        expect(TokenType.KEYWORD_NATIVE);
+        consume();
+
+        expect(TokenType.KEYWORD_FUNC);
+        consume();
+
+        expect(TokenType.LEFT_ANGLE_BRACKET);
+        consume();
+
+        Type type = parseType();
+        expect(TokenType.RIGHT_ANGLE_BRACKET);
+        consume();
+
+        expect(TokenType.IDENTIFIER);
+        String name = consume().getText();
+
+        List<FunctionArgument> args = new ArrayList<>();
+        expect(TokenType.LEFT_PAREN);
+        consume();
+
+        while (current().getType() != TokenType.RIGHT_PAREN) {
+            Type argType = parseType();
+            String argName = consume().getText();
+            args.add(new FunctionArgument(argType, argName));
+            if (current().getType() != TokenType.RIGHT_PAREN) {
+                expect(TokenType.COMMA);
+                consume();
+            }
+        }
+        consume();
+
+        expect(TokenType.SEMICOLON);
+        consume();
+
+        globalSymbols.put(name, new Symbol(type, name));
+
+        return new NativeFunction(type, name, args);
     }
 
     private AstNode parseReturn() {

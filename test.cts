@@ -1,12 +1,9 @@
-func write(string s) = _code("int 0x04000000");
-
-func println(string msg) {
-    write(msg);
-    write("\n");
-}
+native func<void> test(int thang);
 
 func<int> main(int argc, long argv) {
-    int h = 1 + 2 + 3 + 4 + 5;
+    int x = 35 + 34;
 
-    return 0;
+    test(x);
+
+    return 2 + 2;
 }

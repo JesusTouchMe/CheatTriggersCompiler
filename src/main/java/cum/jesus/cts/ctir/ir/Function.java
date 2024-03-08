@@ -156,6 +156,8 @@ public class Function extends Value {
     @Override
     public void emit(List<AsmValue> values) {
         if (blocks.isEmpty()) {
+            values.add(new ConstantPoolFake(new FakeFunctionHandleOperand(name)));
+            emittedValue = new ConstPoolEntryOperand(module.constPoolOffset++);
             return;
         }
 
@@ -320,7 +322,8 @@ public class Function extends Value {
                 "cyan", "magenta"
         };
 
-        try (FileWriter graphout = new FileWriter("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot", true)) {
+        //try (FileWriter graphout = new FileWriter("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot", true)) {
+        try (FileWriter graphout = new FileWriter("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\test.ct")) {
             graphout.write("\n\nstrict graph {");
 
             while (!stack.empty()) {
