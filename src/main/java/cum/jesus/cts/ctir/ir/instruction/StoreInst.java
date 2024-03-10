@@ -5,7 +5,7 @@ import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.StrInstruction;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Value;
-import cum.jesus.cts.type.PointerType;
+import cum.jesus.cts.ctir.type.PointerType;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -22,7 +22,7 @@ public final class StoreInst extends Instruction {
         this.value = value.getId();
 
         PointerType ptrType = (PointerType) parent.getParent().getValue(this.ptr).getType();
-        assert ptrType.getUnderlyingType().equals(value.getType());
+        assert ptrType.getBaseType().equals(value.getType());
     }
 
     @Override

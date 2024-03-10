@@ -14,10 +14,10 @@ import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.Module;
 import cum.jesus.cts.ctir.OptimizationLevel;
 import cum.jesus.cts.ctir.ir.instruction.AllocaInst;
-import cum.jesus.cts.ctir.ir.misc.SetStackOffset;
 import cum.jesus.cts.ctir.ir.misc.SaveStackOffset;
-import cum.jesus.cts.type.FunctionType;
-import cum.jesus.cts.type.Type;
+import cum.jesus.cts.ctir.ir.misc.SetStackOffset;
+import cum.jesus.cts.ctir.type.FunctionType;
+import cum.jesus.cts.ctir.type.Type;
 import cum.jesus.cts.util.Pair;
 
 import java.io.FileWriter;
@@ -47,11 +47,12 @@ public class Function extends Value {
         int[] argRegisters = { Register.regC, Register.regD, Register.regF, Register.regG};
 
         int i = 0;
-        for (Type argType : type.getArgs()) {
+        int stackArgs = -1;
+        for (Type argType : type.getArguments()) {
             int id = instructionCount++;
             Argument arg = new Argument(module, id, argType, String.valueOf(id));
             values.add(arg);
-            arg.color = argRegisters.length > i ? argRegisters[i++] : -1; // Argument assumes it's on stack if its register is -1
+            arg.color = (argRegisters.length > i) ? argRegisters[i++] : stackArgs--; // Argument assumes it's on stack if its register is -1
             args.add(id);
         }
     }
@@ -323,7 +324,8 @@ public class Function extends Value {
         };
 
         //try (FileWriter graphout = new FileWriter("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot", true)) {
-        try (FileWriter graphout = new FileWriter("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\test.ct")) {
+        //try (FileWriter graphout = new FileWriter("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\ctir.dot", true)) {
+        try (FileWriter graphout = new FileWriter("ctir.dot", true)) {
             graphout.write("\n\nstrict graph {");
 
             while (!stack.empty()) {
@@ -333,7 +335,7 @@ public class Function extends Value {
                     graphout.write("\n\tN" + id + " -- N" + edge.first);
                 }
 
-                int color = values.get(id).color;
+                int color = (values.get(id).color < 0) ? -1 : values.get(id).color;
                 if (color == -1) {
                     color = 1; // 0 is special ed prefix buffer, start with 1 :D
                     while (color < k) {
@@ -345,7 +347,9 @@ public class Function extends Value {
                         }
                         color++;
                     }
-                    values.get(id).color = color;
+                    if (!(values.get(id) instanceof Argument)) {
+                        values.get(id).color = color;
+                    }
                 }
                 values.get(id).register = registers[color - 1];
 
@@ -376,13 +380,12 @@ public class Function extends Value {
         for (Value alloca : temp) {
             if (alloca instanceof SaveStackOffset) {
                 savedOffset.push(offset);
-                maxOffset = Math.max(maxOffset, offset);
             } else if (alloca instanceof SetStackOffset) {
-                maxOffset = Math.max(maxOffset, offset);
                 offset = savedOffset.pop();
             } else {
-                offset += 1; // an alloca is 1 value aka 1 size cuz vm works in values not bytes
-                ((AllocaInst) alloca).setStackOffset(allocaSignature, (short) offset);
+                ((AllocaInst) alloca).setStackOffset(allocaSignature, (short) (offset + 1));
+                offset += ((AllocaInst) alloca).getAllocatedType().getSize();
+                maxOffset = Math.max(maxOffset, offset);
             }
         }
 

@@ -7,14 +7,19 @@ import cum.jesus.cts.ctir.ir.instruction.Instruction;
 import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.lexing.TokenType;
 import cum.jesus.cts.parsing.ast.AstNode;
-import cum.jesus.cts.util.exceptions.UnreachableStatementException;
+import cum.jesus.cts.type.StructType;
+import cum.jesus.cts.type.Type;
+import cum.jesus.cts.util.Pair;
+
+import java.util.List;
 
 public final class BinaryExpression extends AstNode {
     private AstNode left;
     private Operator operator;
     private AstNode right;
 
-    public BinaryExpression(AstNode left, TokenType operator, AstNode right) {
+    public BinaryExpression(List<String> annotations, AstNode left, TokenType operator, AstNode right) {
+        super(annotations);
         this.left = left;
         this.right = right;
 
@@ -55,54 +60,87 @@ public final class BinaryExpression extends AstNode {
                 this.operator = Operator.GREATER_EQUAL;
                 break;
 
+            case DOT:
+                this.operator = Operator.MEMBER_ACCESS;
+                break;
+
             default:
                 throw new RuntimeException("Unknown binary operator");
         }
 
-        type = left.getType();
+        if (this.operator == Operator.ASSIGN) {
+            type = left.getType();
+        } else if (this.operator == Operator.MEMBER_ACCESS) {
+            if (left.getType() == null || !left.getType().isStructType());
+            else {
+                type = new Type(((StructType) left.getType()).getMemberIndex(((Variable) right).getName()).second);
+            }
+        } else if (this.operator == Operator.EQUAL || this.operator == Operator.NOT_EQUAL
+        || this.operator == Operator.LESS || this.operator == Operator.GREATER
+        || this.operator == Operator.LESS_EQUAL || this.operator == Operator.GREATER_EQUAL) {
+            type = Type.get("bool");
+        } else {
+            type = left.getType();
+        }
     }
 
     @Override
     public Value emit(Module module, Builder builder, Environment scope) {
-        Value leftValue = left.emit(module, builder, scope);
-        Value rightValue = right.emit(module, builder, scope);
+        Value lhs = left.emit(module, builder, scope);
+
+        if (operator == Operator.MEMBER_ACCESS) {
+            Pair<Integer, cum.jesus.cts.ctir.type.Type> field = ((StructType) left.getType()).getMemberIndex(((Variable) right).getName());
+            Instruction inst = (Instruction) lhs;
+            Value ptr = Module.getPointerOperand(inst);
+
+            Value gep = builder.createStructGEP(ptr.getType(), ptr, field.first);
+
+            Value load = builder.createLoad(gep);
+            load.setType(gep.getType().getPointerElementType());
+
+            inst.eraseFromParent();
+
+            return load;
+        }
+
+        Value rhs = right.emit(module, builder, scope);
 
         switch (operator) {
             case ADD:
-                return builder.createAdd(leftValue, rightValue);
+                return builder.createAdd(lhs, rhs);
             case SUB:
-                return builder.createSub(leftValue, rightValue);
+                return builder.createSub(lhs, rhs);
             case MUL:
-                return builder.createMul(leftValue, rightValue);
+                return builder.createMul(lhs, rhs);
             case DIV:
-                return builder.createDiv(leftValue, rightValue);
+                return builder.createDiv(lhs, rhs);
 
             case ASSIGN:
-                Instruction instruction = (Instruction) leftValue;
+                Instruction instruction = (Instruction) lhs;
                 instruction.eraseFromParent();
-                return builder.createStore(Module.getPointerOperand(leftValue), rightValue);
+                return builder.createStore(Module.getPointerOperand(lhs), rhs);
 
             case EQUAL:
-                return builder.createCmpEq(leftValue, rightValue);
+                return builder.createCmpEq(lhs, rhs);
             case NOT_EQUAL:
-                return builder.createCmpNe(leftValue, rightValue);
+                return builder.createCmpNe(lhs, rhs);
             case LESS:
-                return builder.createCmpLt(leftValue, rightValue);
+                return builder.createCmpLt(lhs, rhs);
             case GREATER:
-                return builder.createCmpGt(leftValue, rightValue);
+                return builder.createCmpGt(lhs, rhs);
             case LESS_EQUAL:
-                return builder.createCmpLte(leftValue, rightValue);
+                return builder.createCmpLte(lhs, rhs);
             case GREATER_EQUAL:
-                return builder.createCmpGte(leftValue, rightValue);
+                return builder.createCmpGte(lhs, rhs);
         }
 
-        throw UnreachableStatementException.INSTANCE;
+        return null;
     }
 
     @Override
     public String toString(int indentationLevel) {
         StringBuilder sb = new StringBuilder();
-        sb.append('(').append(operator.toString()).append(" \"").append(type.toString()).append("\"\n");
+        sb.append('(').append(operator.toString()).append(" \"").append(type).append("\"\n");
 
         for (int i = 0; i < indentationLevel + 1; i++) {
             sb.append("  ");
@@ -125,6 +163,8 @@ public final class BinaryExpression extends AstNode {
         EQUAL("eq"), NOT_EQUAL("ne"),
         LESS("lt"), GREATER("gt"),
         LESS_EQUAL("lte"), GREATER_EQUAL("gte"),
+
+        MEMBER_ACCESS("member"),
 
         ;
 

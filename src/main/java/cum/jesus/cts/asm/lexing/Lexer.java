@@ -75,6 +75,7 @@ public final class Lexer {
     private static final HashSet<String> constPoolInstructions = new HashSet<String>() {{
         add("number");
         add("string");
+        add("function");
     }};
 
     public Lexer(String text) {

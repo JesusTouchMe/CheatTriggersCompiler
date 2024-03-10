@@ -99,6 +99,7 @@ public final class Parser {
         // they actually do the same either way lol but it's nicer having a sense of type control. number "hello world" is completely valid code but try not to do that :D
         constantPoolParsers.put("number", () -> new Builder<ConstantPoolFake>(fileName, errorReporter, specialOperandParser).parse(tokenStream, ConstantPoolFake.class));
         constantPoolParsers.put("string", () -> new Builder<ConstantPoolFake>(fileName, errorReporter, specialOperandParser).parse(tokenStream, ConstantPoolFake.class));
+        constantPoolParsers.put("function", () -> new Builder<ConstantPoolFake>(fileName, errorReporter, specialOperandParser).parse(tokenStream, ConstantPoolFake.class));
     }
     
     public Parser withSpecialOperandParser(Function<TokenStream, Operand> parser) {

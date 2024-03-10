@@ -9,11 +9,14 @@ import cum.jesus.cts.environment.LocalSymbol;
 import cum.jesus.cts.parsing.ast.AstNode;
 import cum.jesus.cts.type.Type;
 
+import java.util.List;
+
 public final class VariableDeclaration extends AstNode {
     private String name;
     private AstNode value;
 
-    public VariableDeclaration(Type type, final String name, AstNode value) {
+    public VariableDeclaration(List<String> annotations, Type type, final String name, AstNode value) {
+        super(annotations);
         this.name = name;
         this.value = value;
         super.type = type;
@@ -21,7 +24,7 @@ public final class VariableDeclaration extends AstNode {
 
     @Override
     public Value emit(Module module, Builder builder, Environment scope) {
-        AllocaInst alloca = builder.createAlloca(type);
+        AllocaInst alloca = builder.createAlloca(type.getIRType());
 
         if (value != null) {
             Value initValue = value.emit(module, builder, scope);

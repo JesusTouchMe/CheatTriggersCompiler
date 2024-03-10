@@ -5,7 +5,7 @@ import cum.jesus.cts.asm.instruction.operand.Immediate;
 import cum.jesus.cts.asm.instruction.operand.Register;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.ir.Block;
-import cum.jesus.cts.type.Type;
+import cum.jesus.cts.ctir.type.Type;
 
 import java.io.PrintStream;
 import java.util.ArrayList;

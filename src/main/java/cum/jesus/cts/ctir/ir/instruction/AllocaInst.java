@@ -5,8 +5,8 @@ import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.operand.StackMemory;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Function;
-import cum.jesus.cts.type.PointerType;
-import cum.jesus.cts.type.Type;
+import cum.jesus.cts.ctir.type.PointerType;
+import cum.jesus.cts.ctir.type.Type;
 
 import java.io.PrintStream;
 import java.util.ArrayList;

@@ -4,9 +4,9 @@ import cum.jesus.cts.ctir.Module;
 import cum.jesus.cts.ctir.ir.Builder;
 import cum.jesus.cts.ctir.ir.Function;
 import cum.jesus.cts.ctir.ir.Value;
+import cum.jesus.cts.ctir.type.FunctionType;
 import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.parsing.ast.AstNode;
-import cum.jesus.cts.type.FunctionType;
 import cum.jesus.cts.type.Type;
 
 import java.util.ArrayList;
@@ -18,7 +18,8 @@ public final class NativeFunction extends AstNode {
     private String name;
     private List<FunctionArgument> args;
 
-    public NativeFunction(Type returnType, String name, List<FunctionArgument> args) {
+    public NativeFunction(List<String> annotations, Type returnType, String name, List<FunctionArgument> args) {
+        super(annotations);
         this.returnType = returnType;
         super.type = returnType;
 
@@ -28,12 +29,12 @@ public final class NativeFunction extends AstNode {
 
     @Override
     public Value emit(Module module, Builder builder, Environment scope) {
-        List<Type> argTypes = new ArrayList<>();
+        List<cum.jesus.cts.ctir.type.Type> argTypes = new ArrayList<>();
         for (FunctionArgument arg : args) {
-            argTypes.add(arg.getType());
+            argTypes.add(arg.getType().getIRType());
         }
 
-        FunctionType functionType = FunctionType.get(returnType, argTypes);
+        FunctionType functionType = FunctionType.get(returnType.getIRType(), argTypes);
         Function function = Function.create(functionType, module, name);
 
         Environment.functions.put(name, function);

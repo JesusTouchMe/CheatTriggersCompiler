@@ -3,7 +3,7 @@ package cum.jesus.cts.ctir.ir;
 import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.ctir.Module;
-import cum.jesus.cts.type.Type;
+import cum.jesus.cts.ctir.type.Type;
 import cum.jesus.cts.util.Pair;
 
 import java.io.PrintStream;

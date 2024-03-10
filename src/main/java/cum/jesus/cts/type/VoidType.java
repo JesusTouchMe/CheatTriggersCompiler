@@ -1,13 +1,10 @@
 package cum.jesus.cts.type;
 
-public final class VoidType extends Type {
-    public VoidType() {
-        super("void");
-    }
+import cum.jesus.cts.ctir.type.Type;
 
-    @Override
-    public int getSize() {
-        return 0;
+public final class VoidType extends cum.jesus.cts.type.Type {
+    public VoidType() {
+        super(Type.getVoidType());
     }
 
     @Override

@@ -7,12 +7,15 @@ import cum.jesus.cts.ctir.ir.Value;
 import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.parsing.ast.AstNode;
 
+import java.util.List;
+
 public final class IfStatement extends AstNode {
     private AstNode condition;
     private AstNode body;
     private AstNode elseBody;
 
-    public IfStatement(AstNode condition, AstNode body, AstNode elseBody) {
+    public IfStatement(List<String> annotations, AstNode condition, AstNode body, AstNode elseBody) {
+        super(annotations);
         this.condition = condition;
         this.body = body;
         this.elseBody = elseBody;

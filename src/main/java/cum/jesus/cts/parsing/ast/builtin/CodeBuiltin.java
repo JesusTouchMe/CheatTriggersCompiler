@@ -14,11 +14,12 @@ public final class CodeBuiltin extends AstNode {
     private String asmCode;
     private List<AstNode> params;
 
-    public CodeBuiltin(String asmCode, List<AstNode> params) {
+    public CodeBuiltin(List<String> annotations, String asmCode, List<AstNode> params) {
+        super(annotations);
         this.asmCode = asmCode;
         this.params = params;
 
-        super.type = Type.getVoidType();
+        super.type = Type.get("void");
     }
 
     @Override

@@ -18,6 +18,14 @@ public final class LabelOperand extends Immediate {
         this(name, "");
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
     public void reloc(OpcodeBuilder builder, OperandSize size, int offset) {
         if (!name.equals("$")) {
             if (builder.getLabel(name) == -1) {

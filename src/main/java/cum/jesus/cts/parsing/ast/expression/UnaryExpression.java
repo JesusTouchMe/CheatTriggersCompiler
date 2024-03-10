@@ -8,12 +8,16 @@ import cum.jesus.cts.lexing.TokenType;
 import cum.jesus.cts.parsing.ast.AstNode;
 import cum.jesus.cts.util.exceptions.UnreachableStatementException;
 
+import java.util.List;
+
 public final class UnaryExpression extends AstNode {
     private AstNode operand;
     private Operator operator;
 
-    public UnaryExpression(AstNode operand, TokenType operator) {
+    public UnaryExpression(List<String> annotations, AstNode operand, TokenType operator) {
+        super(annotations);
         this.operand = operand;
+
         switch (operator) {
             case PLUS:
                 this.operator = Operator.POSITIZE;

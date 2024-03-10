@@ -10,6 +10,7 @@ import cum.jesus.cts.parsing.ast.AstNode;
 import cum.jesus.cts.type.Type;
 import cum.jesus.cts.util.exceptions.UnreachableStatementException;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -20,7 +21,8 @@ public final class Variable extends AstNode {
         return name;
     }
 
-    public Variable(final String name, Type type) {
+    public Variable(List<String> annotations, final String name, Type type) {
+        super(annotations);
         this.name = name;
         super.type = type;
     }
@@ -34,19 +36,19 @@ public final class Variable extends AstNode {
 
         Optional<LocalSymbol> variable = scope.findVariable(name);
         if (!variable.isPresent()) {
-            throw UnreachableStatementException.INSTANCE;
+            throw UnreachableStatementException.INSTANCE; // this condition is prevented by the parser but yk it's nice to have
         }
 
         AtomicReference<Value> value = new AtomicReference<>();
         // return builder.createLoad(variable.get().alloca);
         variable.get().alloca.consume(value::set, value::set);
 
-        return builder.createLoad(value.get());
+        return builder.createLoad(value.get()); //TODO: decide when to load and when to return straight up value
     }
 
     @Override
     public String toString(int indentationLevel) {
-        return "(var \"" + type.toString() + "\" \"" + name + "\")";
+        return "(var \"" + type + "\" \"" + name + "\")";
     }
 
     @Override

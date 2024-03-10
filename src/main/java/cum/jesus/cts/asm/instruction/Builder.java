@@ -1,6 +1,7 @@
 package cum.jesus.cts.asm.instruction;
 
 import cum.jesus.cts.asm.instruction.fakes.ConstantPoolFake;
+import cum.jesus.cts.asm.instruction.fakes.FakeFunctionHandleOperand;
 import cum.jesus.cts.asm.instruction.fakes.FunctionInstructionFake;
 import cum.jesus.cts.asm.instruction.operand.*;
 import cum.jesus.cts.asm.instruction.singleoperandinstruction.IntInstruction;
@@ -99,7 +100,13 @@ public final class Builder<T extends AsmValue> {
             }
         } else if (clazz == ConstantPoolFake.class) {
             try {
-                return clazz.getDeclaredConstructor(Operand.class).newInstance(parseOperand());
+                Operand operand = parseOperand();
+
+                if (operand instanceof LabelOperand) {
+                    return clazz.getDeclaredConstructor(Operand.class).newInstance(new FakeFunctionHandleOperand(((LabelOperand) operand).getName()));
+                }
+
+                return clazz.getDeclaredConstructor(Operand.class).newInstance(operand);
             } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException |
                      InstantiationException e) {
                 throw new RuntimeException(e);

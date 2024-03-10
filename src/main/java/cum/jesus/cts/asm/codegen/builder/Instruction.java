@@ -16,7 +16,7 @@ public final class Instruction {
     private byte[] operands;
     private List<ImmediateVariant> immediate = new ArrayList<>();
     private List<String> string = new ArrayList<>();
-    private Optional<Memory> memory = Optional.empty();
+    private List<Memory> memory = new ArrayList<>();
     private List<Integer> constEntry = new ArrayList<>();
 
     Instruction(OutputBuffer output) {
@@ -63,7 +63,7 @@ public final class Instruction {
     }
 
     public Instruction memory(Memory mem) {
-        memory = Optional.of(mem);
+        memory.add(mem);
         return this;
     }
 
@@ -140,12 +140,14 @@ public final class Instruction {
         Collections.reverse(immediate);
         Collections.reverse(string);
         Collections.reverse(constEntry);
+        Collections.reverse(memory);
 
         if (!immediate.isEmpty()) {
             for (ImmediateVariant imm : immediate) {
                 imm.writeToOutput(output); //TODO all
             }
         }
+
         if (!string.isEmpty()) {
             for (String str : string) {
                 output.writeb(Opcodes.IMMS.getOpcode());
@@ -157,11 +159,15 @@ public final class Instruction {
                 }
             }
         }
-        if (memory.isPresent()) {
-            output.writeb(Opcodes.PMEM.getOpcode());
-            output.writeb((byte) memory.get().getReg().getId());
-            output.writes(memory.get().getOffset());
+
+        if (!memory.isEmpty()) {
+            for (Memory mem : memory) {
+                output.writeb(Opcodes.PMEM.getOpcode());
+                output.writeb((byte) mem.getReg().getId());
+                output.writes(mem.getOffset());
+            }
         }
+
         if (!constEntry.isEmpty()) {
             for (int entry : constEntry) {
                 output.writeb(Opcodes.CENT.getOpcode());

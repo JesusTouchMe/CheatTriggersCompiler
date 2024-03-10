@@ -9,7 +9,6 @@ import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.ir.Argument;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Value;
-import cum.jesus.cts.type.PointerType;
 
 import java.io.PrintStream;
 import java.util.Collections;
@@ -28,7 +27,7 @@ public final class LoadInst extends Instruction {
         if (ptr instanceof Argument) {
             super.type = ptr.getType();
         } else {
-            super.type = ((PointerType) (parent.getParent().getValue(this.ptr).getType())).getUnderlyingType();
+            super.type = ptr.getType().getPointerElementType();
         }
     }
 

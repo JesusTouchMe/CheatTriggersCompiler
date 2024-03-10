@@ -6,7 +6,7 @@ import cum.jesus.cts.ctir.ir.instruction.*;
 import cum.jesus.cts.ctir.ir.misc.InlineAsm;
 import cum.jesus.cts.ctir.ir.misc.SaveStackOffset;
 import cum.jesus.cts.ctir.ir.misc.SetStackOffset;
-import cum.jesus.cts.type.Type;
+import cum.jesus.cts.ctir.type.Type;
 
 import java.util.List;
 
@@ -93,6 +93,24 @@ public final class Builder {
 
     public LoadInst createLoad(Value ptr) {
         return createLoad(ptr, "");
+    }
+
+    public StructGEPInst createStructGEP(Type type, Value structPtr, int memberIndex, String name) {
+        int id = insertPoint.getParent().getValueCount();
+        if (name.isEmpty()) {
+            name = String.valueOf(id);
+        }
+
+        StructGEPInst gep = new StructGEPInst(insertPoint, id, type, structPtr, memberIndex, name);
+
+        insertPoint.insertValue(gep);
+        insertPoint.getParent().addValue(gep);
+
+        return gep;
+    }
+
+    public StructGEPInst createStructGEP(Type type, Value structPtr, int memberIndex) {
+        return createStructGEP(type, structPtr, memberIndex, "");
     }
 
     public BinOpInst createAdd(Value left, Value right, String name) {

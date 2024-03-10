@@ -6,10 +6,13 @@ import cum.jesus.cts.ctir.ir.Value;
 import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.parsing.ast.AstNode;
 
+import java.util.List;
+
 public final class ReturnStatement extends AstNode {
     private AstNode value;
 
-    public ReturnStatement(AstNode value) {
+    public ReturnStatement(List<String> annotations, AstNode value) {
+        super(annotations);
         this.value = value;
         type = value.getType();
     }

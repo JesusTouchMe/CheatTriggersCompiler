@@ -4,15 +4,17 @@ import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
 import cum.jesus.cts.asm.instruction.operand.Register;
+import cum.jesus.cts.asm.instruction.singleoperandinstruction.PushInstruction;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.CallInstruction;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Function;
 import cum.jesus.cts.ctir.ir.Value;
-import cum.jesus.cts.type.VoidType;
+import cum.jesus.cts.ctir.type.VoidType;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -20,29 +22,36 @@ public final class CallInst extends Instruction {
     private String name;
     private int callee;
     private List<Integer> parameters;
+    private List<Integer> stackParameters;
 
-    public CallInst(Block parent, int id, String name, Value callee, final List<Value> parameters) {
+    public CallInst(Block parent, int id, String name, Value callee, List<Value> parameters) {
         super(parent.getParent().getModule(), parent, id);
 
         this.name = name;
         this.callee = callee.getId();
         this.parameters = new ArrayList<>();
+        stackParameters = new ArrayList<>();
 
         Function function = module.getFunctions().get(this.callee);
 
         int[] paramRegisters = { Register.regC, Register.regD, Register.regF, Register.regG };
         int i = 0;
+        int stackParams = -1;
         for (Value param : parameters) {
-            assert param.getType().equals(function.getArgument(i).getType());
+            if (!param.getType().equals(function.getArgument(i).getType())) {
+                throw new RuntimeException("Expected " + function.getArgument(i).getType() + ", got " + param.getType());
+            }
             if (i < paramRegisters.length) {
                 param.color = paramRegisters[i++];
             } else {
-                param.color = -1;
+                stackParameters.add(param.getId());
             }
             this.parameters.add(param.getId());
         }
 
         super.type = function.getReturnType();
+
+        Collections.reverse(stackParameters);
     }
 
     @Override
@@ -85,6 +94,10 @@ public final class CallInst extends Instruction {
     @Override
     public void emit(List<AsmValue> values) {
         Operand callee = module.getFunctionEmittedValue(this.callee);
+
+        for (int param : stackParameters) {
+            values.add(new PushInstruction(parent.getEmittedValue(param)));
+        }
 
         values.add(new CallInstruction(new ConstPoolEntryOperand(0), callee));
 

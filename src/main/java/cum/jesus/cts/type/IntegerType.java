@@ -1,19 +1,16 @@
 package cum.jesus.cts.type;
 
-public final class IntegerType extends Type {
+import cum.jesus.cts.ctir.type.Type;
+
+public final class IntegerType extends cum.jesus.cts.type.Type {
     private final int sizeInBits;
 
     public IntegerType(int sizeInBits) {
-        super("i" + sizeInBits);
+        super(Type.getIntegerType(sizeInBits));
         this.sizeInBits = sizeInBits;
     }
 
     public int getSizeInBits() {
-        return sizeInBits;
-    }
-
-    @Override
-    public int getSize() {
         return sizeInBits;
     }
 
@@ -25,9 +22,5 @@ public final class IntegerType extends Type {
     @Override
     public boolean equals(Object obj) {
         return obj instanceof IntegerType && ((IntegerType) obj).sizeInBits <= this.sizeInBits;
-    }
-
-    public static IntegerType get(int sizeInBits) {
-        return (IntegerType) Type.getIntegerType(sizeInBits);
     }
 }
