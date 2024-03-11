@@ -1,0 +1,30 @@
+
+
+strict graph {
+	N0 [color=green]
+}
+
+strict graph {
+	N13 [color=green]
+	N9 [color=green]
+	N1 -- N0
+	N1 [color=yellow]
+	N0 -- N1
+	N0 [color=green]
+}
+
+strict graph {
+	N40 [color=purple]
+	N38 -- N36
+	N38 [color=yellow]
+	N36 -- N38
+	N36 [color=green]
+	N32 -- N30
+	N32 [color=yellow]
+	N30 -- N32
+	N30 [color=green]
+	N1 -- N0
+	N1 [color=yellow]
+	N0 -- N1
+	N0 [color=green]
+}

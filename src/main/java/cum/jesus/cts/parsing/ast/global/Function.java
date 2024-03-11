@@ -10,6 +10,7 @@ import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.environment.LocalSymbol;
 import cum.jesus.cts.parsing.ast.AstNode;
 import cum.jesus.cts.parsing.ast.statement.ReturnStatement;
+import cum.jesus.cts.type.StructType;
 import cum.jesus.cts.type.Type;
 
 import java.util.ArrayList;
@@ -64,7 +65,16 @@ public final class Function extends AstNode {
                 if (j < 4) {
                     AllocaInst alloca = builder.createAlloca(arg.getType().getIRType());
                     scope.variables.put(arg.getName(), new LocalSymbol(alloca, arg.getType()));
-                    builder.createStore(alloca, function.getArgument(j));
+                    //builder.createStore(alloca, function.getArgument(j));
+                    if (arg.getType().isStructType()) {
+                        StructType structType = (StructType) arg.getType();
+                        for (int i = 0; i < structType.getBody().size(); i++) {
+                            Value gep = builder.createStructGEP(structType.getIRType(), alloca, i);
+                            builder.createStore(gep, function.getArgument(j + i));
+                        }
+                    } else {
+                        builder.createStore(alloca, function.getArgument(j));
+                    }
                 } else {
                     scope.variables.put(arg.getName(), new LocalSymbol(function.getArgument(j), arg.getType()));
                 }
