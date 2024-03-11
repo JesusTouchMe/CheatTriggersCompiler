@@ -96,7 +96,7 @@ public final class BinaryExpression extends AstNode {
             Value gep = builder.createStructGEP(ptr.getType(), ptr, field.first);
 
             Value load = builder.createLoad(gep);
-            load.setType(gep.getType().getPointerElementType());
+            //load.setType(gep.getType());
 
             inst.eraseFromParent();
 

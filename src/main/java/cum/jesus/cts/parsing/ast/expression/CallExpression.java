@@ -42,7 +42,7 @@ public final class CallExpression extends AstNode {
                     Value gep = builder.createStructGEP(ptr.getType(), ptr, i);
 
                     Value load = builder.createLoad(gep);
-                    load.setType(gep.getType().getPointerElementType());
+                    //load.setType(gep.getType().getPointerElementType());
 
                     inst.eraseFromParent();
 

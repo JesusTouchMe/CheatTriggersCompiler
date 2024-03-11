@@ -25,7 +25,7 @@ public final class StructGEPInst extends Instruction {
 
     public StructGEPInst(Block parent, int id, Type type, Value structPtr, int memberIndex, String name) {
         super(parent.getParent().getModule(), parent, id);
-        super.type = ((StructType) ((PointerType) type).getBaseType()).getFieldTypes().get(memberIndex);
+        super.type = Type.getPointerType(((StructType) ((PointerType) type).getBaseType()).getFieldTypes().get(memberIndex));
 
         this.structType = ((PointerType) type).getBaseType();
         this.structPtr = structPtr.getId();
@@ -60,7 +60,7 @@ public final class StructGEPInst extends Instruction {
         StructType structType = (StructType) this.structType;
         short requiredLookupOffset = 0;
         for (int i = 0; i < memberIndex; i++) {
-            requiredLookupOffset += structType.getFieldTypes().get(i).getSize();
+            requiredLookupOffset += (short) structType.getFieldTypes().get(i).getSize();
         }
 
         if (ptrOperand instanceof Memory) {
