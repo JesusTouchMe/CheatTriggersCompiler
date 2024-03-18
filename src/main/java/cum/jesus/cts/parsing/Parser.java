@@ -9,14 +9,8 @@ import cum.jesus.cts.parsing.ast.AbstractSyntaxTree;
 import cum.jesus.cts.parsing.ast.AstNode;
 import cum.jesus.cts.parsing.ast.builtin.CodeBuiltin;
 import cum.jesus.cts.parsing.ast.expression.*;
-import cum.jesus.cts.parsing.ast.global.Function;
-import cum.jesus.cts.parsing.ast.global.FunctionArgument;
-import cum.jesus.cts.parsing.ast.global.NativeFunction;
-import cum.jesus.cts.parsing.ast.global.StructDefinition;
-import cum.jesus.cts.parsing.ast.statement.CompoundStatement;
-import cum.jesus.cts.parsing.ast.statement.IfStatement;
-import cum.jesus.cts.parsing.ast.statement.ReturnStatement;
-import cum.jesus.cts.parsing.ast.statement.VariableDeclaration;
+import cum.jesus.cts.parsing.ast.global.*;
+import cum.jesus.cts.parsing.ast.statement.*;
 import cum.jesus.cts.type.StructType;
 import cum.jesus.cts.type.Type;
 import cum.jesus.cts.util.Pair;
@@ -103,6 +97,10 @@ public final class Parser {
             case ASPERAND:
                 parseAnnotation();
                 return null;
+            case KEYWORD_MODULE:
+                return parseModule();
+            case KEYWORD_IMPORT:
+                return parseImport();
             case KEYWORD_NATIVE:
                 return parseNative();
             case KEYWORD_FUNC:
@@ -111,7 +109,7 @@ public final class Parser {
                 return parseStruct();
 
             default:
-                throw new RuntimeException("Unexpected token: " + current().getType() + ". Expected global function or variable");
+                throw new RuntimeException("Unexpected token: " + current().getType() + ". Expected global function or variable. " + current().getSourceLocation());
         }
     }
 
@@ -204,6 +202,30 @@ public final class Parser {
         annotations.add(consume().getText());
     }
 
+    private AstNode parseModule() {
+        consume(); // module
+
+        expect(TokenType.IDENTIFIER);
+        String name = consume().getText();
+
+        expect(TokenType.SEMICOLON);
+        consume();
+
+        return new ModuleStatement(replaceAnnotations(), name);
+    }
+
+    private AstNode parseImport() {
+        consume();
+
+        expect(TokenType.IDENTIFIER);
+        String name = consume().getText();
+
+        expect(TokenType.SEMICOLON);
+        consume();
+
+        return new ImportStatement(replaceAnnotations(), name);
+    }
+
     private AstNode parseFunction() {
         expect(TokenType.KEYWORD_FUNC);
         consume();
@@ -241,6 +263,8 @@ public final class Parser {
         Environment functionScope = new Environment(outer);
         scope = functionScope;
 
+        globalSymbols.put(name, new Symbol(type, name));
+
         for (FunctionArgument arg : args) {
             scope.symbols.put(arg.getName(), new Symbol(arg.getType(), arg.getName()));
         }
@@ -275,7 +299,6 @@ public final class Parser {
         }
         consume();
 
-        globalSymbols.put(name, new Symbol(type, name));
         scope = outer;
 
         return new Function(annotations, type, name, args, body, functionScope);

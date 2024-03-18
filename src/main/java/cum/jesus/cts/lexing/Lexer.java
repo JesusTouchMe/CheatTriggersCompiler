@@ -11,6 +11,8 @@ public final class Lexer {
     private int column = 1;
 
     private static final Map<String, TokenType> keywords = new HashMap<String, TokenType>() {{
+        put("module", TokenType.KEYWORD_MODULE);
+        put("import", TokenType.KEYWORD_IMPORT);
         put("native", TokenType.KEYWORD_NATIVE);
         put("func", TokenType.KEYWORD_FUNC);
         put("return", TokenType.KEYWORD_RETURN);

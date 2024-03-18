@@ -10,13 +10,15 @@ import java.util.List;
 import java.util.Map;
 
 public final class OutputBuffer {
+    private final String name;
     private final ByteBuffer buf;
     private final Map<String, Integer> symbols;
 
     private final List<FunctionSymbol> functionSymbols;
     private final List<ConstPoolEntry> constantPool;
 
-    public OutputBuffer() {
+    public OutputBuffer(String name) {
+        this.name = name;
         buf = new ByteBuffer();
         symbols = new HashMap<>();
         functionSymbols = new ArrayList<>();
@@ -132,6 +134,8 @@ public final class OutputBuffer {
     }
 
     public void emit(OutputStream stream) throws IOException {
+        stream.write(name.getBytes());
+        stream.write(0);
         stream.write(new byte[] {'v', '1', 0, 'F', ' '});
         for (FunctionSymbol function : functionSymbols) {
             function.writeTo(stream);

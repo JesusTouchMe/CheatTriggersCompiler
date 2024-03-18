@@ -6,6 +6,7 @@ import java.util.*;
 
 public final class Environment {
     public static final Map<String, Function> functions = new HashMap<>();
+    public static final Map<String, Environment> modules = new HashMap<>();
 
     public Map<String, LocalSymbol> variables; // for codegen
     public SortedMap<String, Symbol> symbols; // for parser

@@ -4,6 +4,7 @@ import cum.jesus.cts.asm.codegen.OutputBuffer;
 import cum.jesus.cts.asm.codegen.builder.OpcodeBuilder;
 import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Operand;
+import cum.jesus.cts.asm.instruction.fakes.ConstantPoolFake;
 import cum.jesus.cts.asm.instruction.fakes.FunctionInstructionFake;
 import cum.jesus.cts.asm.instruction.nooperandinstruction.RetInstruction;
 import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
@@ -12,6 +13,8 @@ import cum.jesus.cts.asm.instruction.operand.Register;
 import cum.jesus.cts.asm.instruction.operand.StringOperand;
 import cum.jesus.cts.asm.instruction.singleoperandinstruction.IntInstruction;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.CallInstruction;
+import cum.jesus.cts.asm.instruction.twooperandinstruction.CstInstruction;
+import cum.jesus.cts.asm.instruction.twooperandinstruction.ModInstruction;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.ir.Function;
 import cum.jesus.cts.ctir.ir.Value;
@@ -27,6 +30,7 @@ import java.util.Map;
 
 public final class Module {
     private String name;
+    private Map<String, Integer> dependencies;
     private List<Function> functions;
     private List<Function> constructors;
     private Map<String, Integer> strings;
@@ -35,6 +39,7 @@ public final class Module {
 
     public Module(String name) {
         this.name = name;
+        this.dependencies = new HashMap<>();
         this.functions = new ArrayList<>();
         this.constructors = new ArrayList<>();
         this.strings = new HashMap<>();
@@ -42,6 +47,10 @@ public final class Module {
 
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public List<Function> getFunctions() {
@@ -59,6 +68,10 @@ public final class Module {
             }
         }
         return false;
+    }
+
+    public void addImport(String name) {
+        dependencies.put(name, constPoolOffset++);
     }
 
     public Function getFunction(int id) {
@@ -156,18 +169,37 @@ public final class Module {
 
         values.add(new FunctionInstructionFake(".start"));
 
+        for (Map.Entry<String, Integer> dependency : dependencies.entrySet()) {
+            String str = dependency.getKey();
+
+            if (!hasString(str)) {
+                values.add(new ConstantPoolFake(new StringOperand(str)));
+                insertString(str);
+            }
+
+            values.add(new ModInstruction(Register.get("regA"), new ConstPoolEntryOperand(getString(str))));
+            values.add(new CstInstruction(new ConstPoolEntryOperand(dependency.getValue()), Register.get("regA")));
+        }
+
         if (mainFunction != -1) {
             values.add(new CallInstruction(new ConstPoolEntryOperand(0), getFunctionEmittedValue(mainFunction)));
+            values.add(new MovInstruction(Register.get("regC"), Register.get("regE")));
         } else {
-            StringOperand failMsg = new StringOperand("No main function was located in this module\n");
-            values.add(new MovInstruction(Register.get("regC"), failMsg));
+            String str = "No main function was located in this module\n";
+
+            if (!hasString(str)) {
+                values.add(new ConstantPoolFake(new StringOperand(str)));
+                insertString(str);
+            }
+
+            values.add(new MovInstruction(Register.get("regC"), new ConstPoolEntryOperand(getString(str))));
             values.add(new IntInstruction(0x04)); // 0x04 = write, https://docs.google.com/spreadsheets/d/1hRenVVeyh3f27tRenfae8wAnFxkpI1cn3Jle5Rtt5TA/edit?usp=sharing
-            values.add(new MovInstruction(Register.get("regE"), new Immediate(-1)));
+            values.add(new MovInstruction(Register.get("regC"), new Immediate(-1)));
         }
 
         values.add(new IntInstruction(0x01)); // 0x01 = exit
 
-        OutputBuffer output = new OutputBuffer();
+        OutputBuffer output = new OutputBuffer(name);
         OpcodeBuilder builder = new OpcodeBuilder(output);
 
         for (AsmValue value : values) {

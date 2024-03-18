@@ -23,16 +23,13 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        //File input = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.cts");
-        //File input = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\test.cts");
-        File input = new File("test.cts");
+        System.out.println(args[0]);
+        File input = new File(args[0]);
 
         if (!input.canRead()) {
             throw new IOException("Cannot read input file");
         }
 
-        //File graphout = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot");
-        //File graphout = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\ctir.dot");
         File graphout = new File("ctir.dot");
         if (graphout.exists()) {
             graphout.delete();
@@ -61,9 +58,7 @@ public class Main {
         System.out.println();
         module.optimize(OptimizationLevel.HIGH);
 
-        //File output = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.ct");
-        //File output = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\test.ct");
-        File output = new File("test.ct");
+        File output = new File(args[0].substring(0, args[0].length() - 1));
         if (!output.exists()) {
             output.createNewFile();
         }
@@ -86,7 +81,7 @@ public class Main {
         cum.jesus.cts.asm.parsing.Parser parser = new cum.jesus.cts.asm.parsing.Parser(input.getName(), tokens, errorReporter);
 
         List<AsmValue> values = parser.parse();
-        OutputBuffer outputBuffer = new OutputBuffer();
+        OutputBuffer outputBuffer = new OutputBuffer(input.getName());
         OpcodeBuilder builder = new OpcodeBuilder(outputBuffer);
 
         for (AsmValue value : values) {

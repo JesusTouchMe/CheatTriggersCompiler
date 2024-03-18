@@ -59,7 +59,7 @@ public final class CallExpression extends AstNode {
     @Override
     public String toString(int indentationLevel) {
         StringBuilder sb = new StringBuilder();
-        sb.append("(call \"").append(callee.toString()).append("\" (list ");
+        sb.append("(call \"").append(callee).append("\" (list ");
 
         Iterator<AstNode> it = params.iterator();
         while (it.hasNext()) {

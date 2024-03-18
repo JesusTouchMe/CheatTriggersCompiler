@@ -52,7 +52,7 @@ public class Function extends Value {
             int id = instructionCount++;
             Argument arg = new Argument(module, id, argType, String.valueOf(id));
             values.add(arg);
-            arg.color = (argRegisters.length > i) ? argRegisters[i++] : stackArgs--; // Argument assumes it's on stack if its register is -1
+            arg.color = (argRegisters.length > i) ? argRegisters[i++] : stackArgs--; // Argument assumes it's on stack if its register is negative
             args.add(id);
         }
     }

@@ -13,4 +13,9 @@ public final class SourceLocation {
         this.line = other.line;
         this.column = other.column;
     }
+
+    @Override
+    public String toString() {
+        return line + ":" + column;
+    }
 }
