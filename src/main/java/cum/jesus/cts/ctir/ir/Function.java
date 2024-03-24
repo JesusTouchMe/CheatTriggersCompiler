@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
 
-public class Function extends Value {
+public class Function extends Global {
     private String name;
     private List<Block> blocks;
     private List<Value> values;
@@ -35,7 +35,9 @@ public class Function extends Value {
     public int totalStackOffset = 0;
 
     private Function(FunctionType type, Module module, String name) {
-        super(module, module.getFunctions().size());
+        super(module);
+
+        id = module.getFunctions().size();
 
         this.name = name;
         this.blocks = new ArrayList<>();
@@ -77,6 +79,14 @@ public class Function extends Value {
 
     public List<Block> getBlocks() {
         return blocks;
+    }
+
+    public List<Argument> getArgs() {
+        List<Argument> res = new ArrayList<>(args.size());
+        for (int i = 0; i < args.size(); i++) {
+            res.add(getArgument(i));
+        }
+        return res;
     }
 
     public Value getValue(int index) {
@@ -151,7 +161,7 @@ public class Function extends Value {
 
     @Override
     public String ident() {
-        return String.format("@%s", name);
+        return String.format("%s@%s", module.getName(), name);
     }
 
     @Override
@@ -186,6 +196,7 @@ public class Function extends Value {
         }
     }
 
+    @Override
     public void optimize(OptimizationLevel level) {
         allocateRegisters();
         sortAllocas();
@@ -291,10 +302,10 @@ public class Function extends Value {
         final int k = 8;
 
         int count = allNodes.size();
+        int iterations = 0;
         while (count != 0) {
-            for (int i = 0; i < allNodes.size(); i++) {
-                Pair<Integer, Boolean> it = allNodes.get(i);
-
+            iterations++;
+            for (Pair<Integer, Boolean> it : allNodes) {
                 if (it.second && values.get(it.first).edges.size() < k) {
                     stack.push(it.first);
                     for (Pair<Integer, Boolean> node : allNodes) {
@@ -309,6 +320,10 @@ public class Function extends Value {
                     it.second = false;
                     count -= 1;
                 }
+            }
+
+            if (iterations >= 10000) {
+                break; // tmp
             }
         }
 
@@ -366,7 +381,7 @@ public class Function extends Value {
 
         for (Block block : blocks) {
             for (int instruction : block.getInstructions()) {
-                if (values.get(instruction) instanceof AllocaInst | values.get(instruction) instanceof SaveStackOffset || values.get(instruction) instanceof SetStackOffset) {
+                if (values.get(instruction) instanceof AllocaInst || values.get(instruction) instanceof SaveStackOffset || values.get(instruction) instanceof SetStackOffset) {
                     temp.add(values.get(instruction));
                 }
             }

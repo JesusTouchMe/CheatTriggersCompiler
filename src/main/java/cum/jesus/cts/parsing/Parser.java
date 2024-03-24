@@ -2,6 +2,8 @@ package cum.jesus.cts.parsing;
 
 import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.environment.Symbol;
+import cum.jesus.cts.error.ErrorContext;
+import cum.jesus.cts.error.ErrorReporter;
 import cum.jesus.cts.lexing.SourceLocation;
 import cum.jesus.cts.lexing.Token;
 import cum.jesus.cts.lexing.TokenType;
@@ -11,6 +13,7 @@ import cum.jesus.cts.parsing.ast.builtin.CodeBuiltin;
 import cum.jesus.cts.parsing.ast.expression.*;
 import cum.jesus.cts.parsing.ast.global.*;
 import cum.jesus.cts.parsing.ast.statement.*;
+import cum.jesus.cts.type.ArrayType;
 import cum.jesus.cts.type.StructType;
 import cum.jesus.cts.type.Type;
 import cum.jesus.cts.util.Pair;
@@ -18,15 +21,19 @@ import cum.jesus.cts.util.Pair;
 import java.util.*;
 
 public final class Parser {
+    private String fileName;
     private Environment scope;
+    private ErrorReporter errorReporter;
     public SortedMap<String, Symbol> globalSymbols;
     private final List<Token> tokens;
     private int pos = 0;
     private List<String> annotations;
 
-    public Parser(List<Token> tokens, Environment scope) {
+    public Parser(String fileName, List<Token> tokens, Environment scope, ErrorReporter errorReporter) {
+        this.fileName = fileName;
         this.tokens = tokens;
         this.scope = scope;
+        this.errorReporter = errorReporter;
         globalSymbols = new TreeMap<>();
         annotations = new ArrayList<>();
     }
@@ -51,6 +58,9 @@ public final class Parser {
 
             case DOT:
                 return 50;
+
+            case LEFT_BRACKET:
+                return 45;
 
             case STAR:
             case SLASH:
@@ -80,6 +90,8 @@ public final class Parser {
         switch (type) {
             case PLUS:
             case MINUS:
+            case KEYWORD_NEW:
+            case KEYWORD_DELETE:
                 return 50;
 
             default:
@@ -89,8 +101,12 @@ public final class Parser {
 
     private AstNode global() {
         switch (current().getType()) {
+            case IDENTIFIER:
+                if (!Type.exists(current().getText())) {
+                    errorReporter.fatal(new ErrorContext(fileName, "Unknown type: '" + current().getText() + "'.", current()));
+                }
             case TYPE:
-                AstNode variableDeclaration = parseVariableDeclaration();
+                AstNode variableDeclaration = parseVariableDeclaration(true);
                 expect(TokenType.SEMICOLON);
                 consume();
                 return variableDeclaration;
@@ -98,7 +114,11 @@ public final class Parser {
                 parseAnnotation();
                 return null;
             case KEYWORD_MODULE:
-                return parseModule();
+                if (pos == 0) {
+                    return parseModule();
+                }
+                errorReporter.fatal(new ErrorContext(fileName, "Module declarations must be the first statement in a file.", current()));
+                return null;
             case KEYWORD_IMPORT:
                 return parseImport();
             case KEYWORD_NATIVE:
@@ -109,7 +129,8 @@ public final class Parser {
                 return parseStruct();
 
             default:
-                throw new RuntimeException("Unexpected token: " + current().getType() + ". Expected global function or variable. " + current().getSourceLocation());
+                errorReporter.fatal(new ErrorContext(fileName, "Expected a global statement, got '" + current().getText() + "'.", current()));
+                return null;
         }
     }
 
@@ -118,7 +139,12 @@ public final class Parser {
         int unaryOperatorPrecedence = getUnaryOperatorPrecedence(current().getType());
         if (unaryOperatorPrecedence != 0 && unaryOperatorPrecedence >= precedence) {
             TokenType operator = consume().getType();
-            lhs = new UnaryExpression(replaceAnnotations(), expr(unaryOperatorPrecedence), operator);
+            if (operator == TokenType.KEYWORD_NEW) {
+                AstNode operand = new Variable(replaceAnnotations(), consume().getText(), null);
+                lhs = new UnaryExpression(replaceAnnotations(), operand, operator);
+            } else {
+                lhs = new UnaryExpression(replaceAnnotations(), expr(unaryOperatorPrecedence), operator);
+            }
         } else {
             lhs = parsePrimary();
         }
@@ -143,6 +169,11 @@ public final class Parser {
             if (operator != TokenType.LEFT_PAREN) {
                 lhs = new BinaryExpression(replaceAnnotations(), lhs, operator, rhs);
             }
+
+            if (operator == TokenType.LEFT_BRACKET) {
+                expect(TokenType.RIGHT_BRACKET);
+                consume();
+            }
         }
 
         return lhs;
@@ -158,7 +189,11 @@ public final class Parser {
                 return parseReturn();
 
             case TYPE:
-                return parseVariableDeclaration();
+                if (peek(1).getType() == TokenType.LEFT_PAREN) {
+                    return new Variable(replaceAnnotations(), consume().getText(), null);
+                }
+
+                return parseVariableDeclaration(false);
 
             case ASPERAND:
                 parseAnnotation();
@@ -167,10 +202,23 @@ public final class Parser {
             case KEYWORD_IF:
                 return parseIfStatement();
 
+            case KEYWORD_FOR:
+                return parseForStatement();
+
+            case KEYWORD_WHILE:
+                return parseWhileStatement();
+
             case LEFT_BRACE:
                 return parseCompoundStatement();
 
             case IDENTIFIER:
+                if (Type.exists(current().getText())) {
+                    if (peek(1).getType() == TokenType.LEFT_PAREN) {
+                        return new Variable(replaceAnnotations(), consume().getText(), null);
+                    }
+
+                    return parseVariableDeclaration(false);
+                }
                 return parseVariable();
 
             case INTEGER_LITERAL:
@@ -186,13 +234,27 @@ public final class Parser {
                 return parseBuiltinCode();
 
             default:
-                throw new RuntimeException("Primary issue: expected a primary expression token, got " + current().getType());
+                errorReporter.fatal(new ErrorContext(fileName, "Expected a primary statement.", current()));
+                return null;
         }
     }
 
     private Type parseType() {
-        //expect(TokenType.TYPE);
-        return Type.get(consume().getText());
+        Type type = Type.get(consume().getText());
+        while (current().getType() == TokenType.LEFT_BRACKET) {
+            consume();
+            if (current().getType() == TokenType.INTEGER_LITERAL) {
+                int length = Integer.parseInt(consume().getText());
+                type = new ArrayType(type, length, false);
+            } else {
+                type = new ArrayType(type, 0, true);
+            }
+
+            expect(TokenType.RIGHT_BRACKET);
+            consume();
+        }
+
+        return type;
     }
 
     private void parseAnnotation() {
@@ -211,6 +273,8 @@ public final class Parser {
         expect(TokenType.SEMICOLON);
         consume();
 
+        Environment.scopes.put(name, scope);
+
         return new ModuleStatement(replaceAnnotations(), name);
     }
 
@@ -227,6 +291,8 @@ public final class Parser {
     }
 
     private AstNode parseFunction() {
+        List<String> annotations = replaceAnnotations();
+
         expect(TokenType.KEYWORD_FUNC);
         consume();
 
@@ -271,8 +337,6 @@ public final class Parser {
 
         if (current().getType() == TokenType.EQUALS) {
             consume();
-
-            List<String> annotations = replaceAnnotations();
 
             AstNode value = expr();
             expect(TokenType.SEMICOLON);
@@ -357,23 +421,141 @@ public final class Parser {
         consume();
 
         List<Pair<Type, String>> structTypeFields = new ArrayList<>();
+        List<StructDefinition.Method> methods = new ArrayList<>();
         List<StructDefinition.Field> fields = new ArrayList<>();
 
         while (current().getType() != TokenType.RIGHT_BRACE) {
-            Type fieldType = parseType();
-            String fieldName = consume().getText();
+            if (current().getText().equals(name) && peek(1).getType() == TokenType.LEFT_PAREN) { // struct constructor
+                consume();
 
-            expect(TokenType.SEMICOLON);
-            consume();
+                Environment outer = scope;
+                Environment constructorScope = new Environment(outer);
+                scope = constructorScope;
 
-            structTypeFields.add(new Pair<>(fieldType, fieldName));
-            fields.add(new StructDefinition.Field(StructDefinition.AccessLevel.PUBLIC, fieldType, fieldName));
+                List<FunctionArgument> args = new ArrayList<>();
+                consume();
+
+                while (current().getType() != TokenType.RIGHT_PAREN) {
+                    Type argType = parseType();
+                    String argName = consume().getText();
+                    args.add(new FunctionArgument(argType, argName));
+                    if (current().getType() != TokenType.RIGHT_PAREN) {
+                        expect(TokenType.COMMA);
+                        consume();
+                    }
+                }
+                consume();
+
+                for (FunctionArgument arg : args) {
+                    scope.symbols.put(arg.getName(), new Symbol(arg.getType(), arg.getName()));
+                }
+
+                expect(TokenType.LEFT_BRACE);
+                consume();
+
+                scope.symbols.put("this", new Symbol(structType, "this"));
+
+                List<AstNode> body = new ArrayList<>();
+                while (current().getType() != TokenType.RIGHT_BRACE) {
+                    body.add(expr());
+                    expect(TokenType.SEMICOLON);
+                    consume();
+                }
+                consume();
+
+                scope = outer;
+
+                methods.add(new StructDefinition.Method(StructDefinition.AccessLevel.PUBLIC, null, name, args, constructorScope, body));
+            } else if (current().getType() == TokenType.KEYWORD_FUNC) { // method
+                consume();
+
+                Type type = Type.get("void");
+                boolean isTypeSpecified = false;
+
+                if (current().getType() == TokenType.LEFT_ANGLE_BRACKET) {
+                    consume();
+                    type = parseType();
+                    expect(TokenType.RIGHT_ANGLE_BRACKET);
+                    consume();
+                    isTypeSpecified = true;
+                }
+
+                expect(TokenType.IDENTIFIER);
+                String methodName = consume().getText();
+
+                List<FunctionArgument> args = new ArrayList<>();
+                expect(TokenType.LEFT_PAREN);
+                consume();
+
+                while (current().getType() != TokenType.RIGHT_PAREN) {
+                    Type argType = parseType();
+                    String argName = consume().getText();
+                    args.add(new FunctionArgument(argType, argName));
+                    if (current().getType() != TokenType.RIGHT_PAREN) {
+                        expect(TokenType.COMMA);
+                        consume();
+                    }
+                }
+                consume();
+
+                Environment outer = scope;
+                Environment functionScope = new Environment(outer);
+                scope = functionScope;
+
+                scope.symbols.put("this", new Symbol(structType, "this"));
+
+                for (FunctionArgument arg : args) {
+                    scope.symbols.put(arg.getName(), new Symbol(arg.getType(), arg.getName()));
+                }
+
+                if (current().getType() == TokenType.EQUALS) {
+                    consume();
+
+                    AstNode value = expr();
+                    expect(TokenType.SEMICOLON);
+                    consume();
+
+                    if (!isTypeSpecified) {
+                        type = value.getType() != null ? value.getType() : Type.get("void");
+                    }
+
+                    globalSymbols.put(name, new Symbol(type, name));
+                    scope = outer;
+
+                    methods.add(new StructDefinition.Method(StructDefinition.AccessLevel.PUBLIC, type, methodName, args, functionScope, Collections.singletonList(new ReturnStatement(annotations, value))));
+                    continue;
+                }
+
+                expect(TokenType.LEFT_BRACE);
+                consume();
+
+                List<AstNode> body = new ArrayList<>();
+                while (current().getType() != TokenType.RIGHT_BRACE) {
+                    body.add(expr());
+                    expect(TokenType.SEMICOLON);
+                    consume();
+                }
+                consume();
+
+                scope = outer;
+
+                methods.add(new StructDefinition.Method(StructDefinition.AccessLevel.PUBLIC, type, methodName, args, functionScope, body));
+            } else { // field
+                Type fieldType = parseType();
+                String fieldName = consume().getText();
+
+                expect(TokenType.SEMICOLON);
+                consume();
+
+                structTypeFields.add(new Pair<>(fieldType, fieldName));
+                fields.add(new StructDefinition.Field(StructDefinition.AccessLevel.PUBLIC, fieldType, fieldName));
+            }
         }
         consume();
 
         structType.setBody(structTypeFields);
 
-        AstNode res = new StructDefinition(replaceAnnotations(), name, fields);
+        AstNode res = new StructDefinition(replaceAnnotations(), name, methods, fields);
         res.setType(structType);
         return res;
     }
@@ -389,7 +571,7 @@ public final class Parser {
         return new ReturnStatement(replaceAnnotations(), expr());
     }
 
-    private AstNode parseVariableDeclaration() {
+    private AstNode parseVariableDeclaration(boolean isGlobal) {
         List<String> annotations = replaceAnnotations();
 
         Type type = parseType();
@@ -400,14 +582,14 @@ public final class Parser {
         scope.symbols.put(name, new Symbol(type, name));
 
         if (current().getType() == TokenType.SEMICOLON) {
-            return new VariableDeclaration(annotations, type, name, null);
+            return new VariableDeclaration(annotations, type, name, null, isGlobal);
         }
 
         expect(TokenType.EQUALS);
         consume();
 
         AstNode initValue = expr();
-        return new VariableDeclaration(annotations, type, name, initValue);
+        return new VariableDeclaration(annotations, type, name, initValue, isGlobal);
     }
 
     private AstNode parseIfStatement() {
@@ -429,6 +611,58 @@ public final class Parser {
         }
 
         return new IfStatement(annotations, condition, body, elseBody);
+    }
+
+    private AstNode parseForStatement() {
+        consume(); // for
+
+        List<String> annotations = replaceAnnotations();
+
+        expect(TokenType.LEFT_PAREN);
+        consume();
+
+        AstNode initExpr = null;
+        AstNode condition = null;
+        AstNode loopExpr = null;
+
+        Environment outer = scope;
+        Environment forScope = new Environment(outer);
+        scope = forScope;
+
+        if (current().getType() != TokenType.SEMICOLON) {
+            initExpr = expr();
+        }
+        expect(TokenType.SEMICOLON);
+        consume();
+
+        if (current().getType() != TokenType.SEMICOLON) {
+            condition = expr();
+        }
+        expect(TokenType.SEMICOLON);
+        consume();
+
+        if (current().getType() != TokenType.RIGHT_PAREN) {
+            loopExpr = expr();
+        }
+        expect(TokenType.RIGHT_PAREN);
+        consume();
+
+        AstNode body = expr();
+
+        scope = outer;
+
+        return new ForStatement(annotations, initExpr, condition, loopExpr, body, forScope);
+    }
+
+    private AstNode parseWhileStatement() {
+        consume();
+
+        List<String> annotations = replaceAnnotations();
+
+        AstNode condition = expr();
+        AstNode body = expr();
+
+        return new WhileStatement(annotations, condition, body);
     }
 
     private AstNode parseCompoundStatement() {
@@ -459,6 +693,10 @@ public final class Parser {
         List<String> annotations = replaceAnnotations();
 
         String name = consume().getText();
+
+        if (Environment.scopes.containsKey(name)) {
+            return new Variable(annotations, name, null);
+        }
 
         Optional<Symbol> symbol = scope.findSymbol(name);
         if (!symbol.isPresent()) {
@@ -538,9 +776,7 @@ public final class Parser {
 
     private void expect(TokenType type) {
         if (current().getType() != type) {
-            System.out.println("Expected " + type + ", got " + current().getText() + " (" + current().getType() + ")");
-            System.out.printf("At %s:%s\n", current().getSourceLocation().line, current().getSourceLocation().column);
-            System.exit(1);
+            errorReporter.fatal(new ErrorContext(fileName, "Expected '" + type + "', but got '" + current().getType() + "'", current()));
         }
     }
 
@@ -555,11 +791,7 @@ public final class Parser {
     }
 
     private Token consume() {
-        Token token = tokens.get(pos++);
-        if (current().getType() == TokenType.IDENTIFIER && Type.exists(current().getText())) {
-            current().setType(TokenType.TYPE);
-        }
-        return token;
+        return tokens.get(pos++);
     }
 
     private Token peek(int offset) {

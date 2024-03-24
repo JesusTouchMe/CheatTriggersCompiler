@@ -1,5 +1,7 @@
 package cum.jesus.cts.asm.lexing;
 
+import cum.jesus.cts.lexing.SourceLocation;
+
 import java.util.Objects;
 
 public final class Token {

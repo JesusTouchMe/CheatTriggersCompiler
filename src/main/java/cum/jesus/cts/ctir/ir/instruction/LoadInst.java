@@ -2,11 +2,14 @@ package cum.jesus.cts.ctir.ir.instruction;
 
 import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Operand;
+import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
+import cum.jesus.cts.asm.instruction.operand.Immediate;
 import cum.jesus.cts.asm.instruction.operand.Memory;
 import cum.jesus.cts.asm.instruction.operand.Register;
+import cum.jesus.cts.asm.instruction.threeoperandinstruction.AddInstruction;
+import cum.jesus.cts.asm.instruction.twooperandinstruction.CldInstruction;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.LodInstruction;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
-import cum.jesus.cts.ctir.ir.Argument;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Value;
 
@@ -24,11 +27,7 @@ public final class LoadInst extends Instruction {
         this.ptr = ptr.getId();
         this.name = name;
 
-        if (ptr instanceof Argument) {
-            super.type = ptr.getType();
-        } else {
-            super.type = ptr.getType().getPointerElementType();
-        }
+        super.type = ptr.getType().getPointerElementType();
     }
 
     @Override
@@ -53,16 +52,26 @@ public final class LoadInst extends Instruction {
 
     @Override
     public void emit(List<AsmValue> values) {
+        Value ptrValue = parent.getParent().getValue(ptr);
         Operand ptrOperand = parent.getEmittedValue(ptr);
 
-        if (ptrOperand instanceof Memory) {
-            values.add(new LodInstruction(Register.get(register), ptrOperand));
-        } else if (parent.getParent().getValue(ptr) instanceof Argument) {
-            values.add(new MovInstruction(Register.get(register), ptrOperand));
+        if (ptrValue instanceof AllocaInst && ((AllocaInst) ptrValue).getAllocatedType().isArrayType()) {
+            AllocaInst alloca = (AllocaInst) ptrValue;
+            if (ptrOperand instanceof Memory) {
+                values.add(new AddInstruction(Register.get(register), ((Memory) ptrOperand).getReg(), new Immediate(((Memory) ptrOperand).getOffset())));
+            } else {
+                throw new RuntimeException("todo");
+            }
+        } else if (ptrValue instanceof AllocaInst && ((AllocaInst) ptrValue).getAllocatedType().isStructType()) {
+            values.add(new AddInstruction(Register.get(register), ((Memory) ptrOperand).getReg(), new Immediate(((Memory) ptrOperand).getOffset())));
         } else {
-            Register reg = (Register) ptrOperand;
-            Operand memory = new Memory(reg);
-            values.add(new LodInstruction(Register.get(register), memory));
+            if (ptrOperand instanceof Memory) {
+                values.add(new LodInstruction(Register.get(register), ptrOperand));
+            } else if (ptrOperand instanceof ConstPoolEntryOperand) {
+                values.add(new CldInstruction(Register.get(register), ptrOperand));
+            } else {
+                values.add(new MovInstruction(Register.get(register), ptrOperand));
+            }
         }
 
         emittedValue = Register.get(register);

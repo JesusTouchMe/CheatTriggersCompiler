@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Objects;
 
 public final class StructType extends cum.jesus.cts.type.Type {
+    private static List<StructType> structTypes = new ArrayList<>();
+
     private String name;
     private List<Pair<cum.jesus.cts.type.Type, String>> fields;
     private int size;
@@ -27,6 +29,16 @@ public final class StructType extends cum.jesus.cts.type.Type {
         structType.setFieldTypes(fieldTypes);
         irType = structType;
         size = (int) structType.getSize();
+    }
+
+    public static StructType findStructType(String name) {
+        for (StructType type : structTypes) {
+            if (type.name.equals(name)) {
+                return type;
+            }
+        }
+
+        return null;
     }
 
     public List<Pair<cum.jesus.cts.type.Type, String>> getBody() {

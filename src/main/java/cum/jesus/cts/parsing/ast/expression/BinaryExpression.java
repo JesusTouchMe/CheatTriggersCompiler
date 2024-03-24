@@ -63,6 +63,9 @@ public final class BinaryExpression extends AstNode {
             case DOT:
                 this.operator = Operator.MEMBER_ACCESS;
                 break;
+            case LEFT_BRACKET:
+                this.operator = Operator.SUBSCRIPT;
+                break;
 
             default:
                 throw new RuntimeException("Unknown binary operator");
@@ -70,6 +73,8 @@ public final class BinaryExpression extends AstNode {
 
         if (this.operator == Operator.ASSIGN) {
             type = left.getType();
+        } else if (this.operator == Operator.SUBSCRIPT) {
+            type = left.getType().getBase();
         } else if (this.operator == Operator.MEMBER_ACCESS) {
             if (left.getType() == null || !left.getType().isStructType());
             else {
@@ -84,25 +89,53 @@ public final class BinaryExpression extends AstNode {
         }
     }
 
+    public AstNode getLeft() {
+        return left;
+    }
+
+    public Operator getOperator() {
+        return operator;
+    }
+
+    public AstNode getRight() {
+        return right;
+    }
+
     @Override
     public Value emit(Module module, Builder builder, Environment scope) {
-        Value lhs = left.emit(module, builder, scope);
+        Value lhs;
 
         if (operator == Operator.MEMBER_ACCESS) {
-            Pair<Integer, cum.jesus.cts.ctir.type.Type> field = ((StructType) left.getType()).getMemberIndex(((Variable) right).getName());
-            Instruction inst = (Instruction) lhs;
-            Value ptr = Module.getPointerOperand(inst);
+            if (left instanceof Variable && Environment.scopes.containsKey(((Variable) left).getName())) {
+                Environment leftScope = Environment.scopes.get(((Variable) left).getName());
 
-            Value gep = builder.createStructGEP(ptr.getType(), ptr, field.first);
+                return right.emit(Environment.modules.get(((Variable) left).getName()), builder, leftScope);
+            } else {
+                lhs = left.emit(module, builder, scope);
 
-            Value load = builder.createLoad(gep);
-            //load.setType(gep.getType());
+                Pair<Integer, cum.jesus.cts.ctir.type.Type> field = ((StructType) left.getType()).getMemberIndex(((Variable) right).getName());
+                Instruction inst = (Instruction) lhs;
+                Value ptr = Module.getPointerOperand(inst);
 
-            inst.eraseFromParent();
+                Value gep = builder.createStructGEP(ptr.getType().getPointerElementType(), ptr, field.first);
 
-            return load;
+                Value load = builder.createLoad(gep);
+                //load.setType(gep.getType());
+
+                inst.eraseFromParent();
+
+                return load;
+            }
         }
 
+        if (operator == Operator.SUBSCRIPT && left instanceof UnaryExpression && ((UnaryExpression) left).getOperand() instanceof Variable && Type.exists(((Variable) ((UnaryExpression) left).getOperand()).getName())) {
+            Type elementType = Type.get(((Variable) ((UnaryExpression) left).getOperand()).getName());
+
+            Value count = right.emit(module, builder, scope);
+            return builder.createMalloc(elementType.getIRType(), count);
+        }
+
+        lhs = left.emit(module, builder, scope);
         Value rhs = right.emit(module, builder, scope);
 
         switch (operator) {
@@ -132,6 +165,18 @@ public final class BinaryExpression extends AstNode {
                 return builder.createCmpLte(lhs, rhs);
             case GREATER_EQUAL:
                 return builder.createCmpGte(lhs, rhs);
+
+            case SUBSCRIPT: {
+                Instruction inst = (Instruction) lhs;
+                Value ptr = Module.getPointerOperand(inst);
+
+                Value gep = builder.createGEP(lhs.getType(), ptr, rhs);
+                Value load = builder.createLoad(gep);
+
+                inst.eraseFromParent();
+
+                return load;
+            }
         }
 
         return null;
@@ -165,6 +210,7 @@ public final class BinaryExpression extends AstNode {
         LESS_EQUAL("lte"), GREATER_EQUAL("gte"),
 
         MEMBER_ACCESS("member"),
+        SUBSCRIPT("subscript"),
 
         ;
 

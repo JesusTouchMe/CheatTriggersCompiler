@@ -9,4 +9,4 @@ func<void> stdIOInit() {
     loadLibrary("C:/Users/Jannik/IdeaProjects/CTVMNative/build/libs/CTVMNative-0.1.1.jar");
 }
 
-native func<void> println(string msg);
+native func<void> println(int msg);

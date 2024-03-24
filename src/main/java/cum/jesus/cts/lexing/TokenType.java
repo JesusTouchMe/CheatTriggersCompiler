@@ -36,8 +36,14 @@ public enum TokenType {
 
     KEYWORD_STRUCT,
 
+    KEYWORD_NEW,
+    KEYWORD_DELETE,
+
     KEYWORD_IF,
     KEYWORD_ELSE,
+
+    KEYWORD_FOR,
+    KEYWORD_WHILE,
 
     BUILTIN_CODE,
 }

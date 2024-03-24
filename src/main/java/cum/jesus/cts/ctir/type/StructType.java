@@ -24,4 +24,9 @@ public final class StructType extends Type {
             size += type.getSize();
         }
     }
+
+    @Override
+    public boolean isStructType() {
+        return true;
+    }
 }

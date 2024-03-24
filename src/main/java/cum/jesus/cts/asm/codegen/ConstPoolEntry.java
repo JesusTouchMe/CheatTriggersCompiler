@@ -3,12 +3,12 @@ package cum.jesus.cts.asm.codegen;
 import cum.jesus.cts.asm.Types;
 import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.fakes.FakeFunctionHandleOperand;
+import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
 import cum.jesus.cts.asm.instruction.operand.Immediate;
 import cum.jesus.cts.asm.instruction.operand.StringOperand;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Stores an operand which MUST be a constant value and writes it to the constant pool
@@ -69,6 +69,10 @@ public final class ConstPoolEntry {
              for (int i = 0; i < length; i++) {
                  stream.write(bytes[i]);
              }
+         } else if (operand instanceof ConstPoolEntryOperand) {
+             stream.write(Types.CONSTANT_LOAD.toByte());
+             stream.write((((ConstPoolEntryOperand) operand).getIndex() >> 8) & 0xFF);
+             stream.write(((ConstPoolEntryOperand) operand).getIndex() & 0xFF);
          }
     }
 }

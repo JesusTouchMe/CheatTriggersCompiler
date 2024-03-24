@@ -1,0 +1,142 @@
+
+
+strict graph {
+	N17 [color=purple]
+	N15 -- N12
+	N15 [color=red]
+	N12 -- N15
+	N12 [color=blue]
+	N7 [color=red]
+	N2 [color=red]
+}
+
+strict graph {
+	N66 -- N64
+	N66 [color=red]
+	N64 -- N66
+	N64 [color=blue]
+	N61 -- N60
+	N61 [color=red]
+	N60 -- N61
+	N60 [color=blue]
+	N56 -- N54
+	N56 [color=red]
+	N54 -- N56
+	N54 [color=blue]
+	N50 -- N43
+	N50 -- N49
+	N50 [color=red]
+	N49 -- N43
+	N49 -- N46
+	N49 -- N48
+	N49 -- N50
+	N49 [color=blue]
+	N48 -- N43
+	N48 -- N46
+	N48 -- N49
+	N48 [color=red]
+	N46 -- N43
+	N46 -- N48
+	N46 -- N49
+	N46 [color=green]
+	N43 -- N42
+	N43 -- N46
+	N43 -- N48
+	N43 -- N49
+	N43 -- N50
+	N43 [color=yellow]
+	N42 -- N43
+	N42 [color=red]
+	N37 -- N34
+	N37 -- N36
+	N37 [color=red]
+	N36 -- N34
+	N36 -- N37
+	N36 [color=blue]
+	N34 -- N36
+	N34 -- N37
+	N34 [color=green]
+	N87 -- N81
+	N87 -- N85
+	N87 [color=red]
+	N85 -- N81
+	N85 -- N84
+	N85 -- N87
+	N85 [color=blue]
+	N84 -- N81
+	N84 -- N85
+	N84 [color=red]
+	N81 -- N84
+	N81 -- N85
+	N81 -- N87
+	N81 [color=green]
+	N78 -- N76
+	N78 [color=red]
+	N76 -- N71
+	N76 -- N75
+	N76 -- N78
+	N76 [color=blue]
+	N75 -- N71
+	N75 -- N74
+	N75 -- N76
+	N75 [color=red]
+	N74 -- N71
+	N74 -- N75
+	N74 [color=blue]
+	N71 -- N74
+	N71 -- N75
+	N71 -- N76
+	N71 [color=green]
+	N28 -- N27
+	N28 [color=red]
+	N27 -- N26
+	N27 -- N28
+	N27 [color=blue]
+	N26 -- N27
+	N26 [color=red]
+	N22 -- N16
+	N22 -- N20
+	N22 [color=red]
+	N20 -- N16
+	N20 -- N19
+	N20 -- N22
+	N20 [color=blue]
+	N19 -- N16
+	N19 -- N20
+	N19 [color=red]
+	N16 -- N19
+	N16 -- N20
+	N16 -- N22
+	N16 [color=green]
+	N11 -- N8
+	N11 -- N10
+	N11 [color=red]
+	N10 -- N8
+	N10 -- N11
+	N10 [color=blue]
+	N8 -- N7
+	N8 -- N10
+	N8 -- N11
+	N8 [color=green]
+	N7 -- N8
+	N7 [color=red]
+	N1 -- N0
+	N1 [color=yellow]
+	N0 -- N1
+	N0 [color=green]
+}
+
+strict graph {
+	N14 [color=purple]
+	N12 [color=green]
+	N10 -- N9
+	N10 -- N12
+	N10 -- N14
+	N10 [color=red]
+	N9 [color=yellow]
+	N7 [color=red]
+	N1 -- N0
+	N1 [color=yellow]
+	N0 -- N1
+	N0 [color=green]
+}

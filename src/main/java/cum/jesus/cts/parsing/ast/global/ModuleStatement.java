@@ -20,6 +20,7 @@ public final class ModuleStatement extends AstNode {
     @Override
     public Value emit(Module module, Builder builder, Environment scope) {
         module.setName(name);
+        Environment.modules.put(name, module);
 
         return null;
     }

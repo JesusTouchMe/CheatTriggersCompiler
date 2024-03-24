@@ -211,8 +211,6 @@ public final class BinOpInst extends Instruction {
                     emittedValue = lhs;
                 }
             } break;
-
-
         }
     }
 

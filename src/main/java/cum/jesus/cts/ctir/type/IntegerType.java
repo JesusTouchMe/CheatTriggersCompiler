@@ -12,4 +12,9 @@ public final class IntegerType extends Type {
     public int getSizeInBits() {
         return sizeInBits;
     }
+
+    @Override
+    public boolean isIntegerType() {
+        return true;
+    }
 }

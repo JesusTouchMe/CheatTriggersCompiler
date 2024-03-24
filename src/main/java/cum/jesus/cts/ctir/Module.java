@@ -3,12 +3,12 @@ package cum.jesus.cts.ctir;
 import cum.jesus.cts.asm.codegen.OutputBuffer;
 import cum.jesus.cts.asm.codegen.builder.OpcodeBuilder;
 import cum.jesus.cts.asm.instruction.AsmValue;
+import cum.jesus.cts.asm.instruction.Label;
 import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.fakes.ConstantPoolFake;
 import cum.jesus.cts.asm.instruction.fakes.FunctionInstructionFake;
 import cum.jesus.cts.asm.instruction.nooperandinstruction.RetInstruction;
 import cum.jesus.cts.asm.instruction.operand.ConstPoolEntryOperand;
-import cum.jesus.cts.asm.instruction.operand.Immediate;
 import cum.jesus.cts.asm.instruction.operand.Register;
 import cum.jesus.cts.asm.instruction.operand.StringOperand;
 import cum.jesus.cts.asm.instruction.singleoperandinstruction.IntInstruction;
@@ -17,21 +17,21 @@ import cum.jesus.cts.asm.instruction.twooperandinstruction.CstInstruction;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.ModInstruction;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.ir.Function;
+import cum.jesus.cts.ctir.ir.GlobalVariable;
 import cum.jesus.cts.ctir.ir.Value;
 import cum.jesus.cts.ctir.ir.instruction.LoadInst;
+import cum.jesus.cts.ctir.type.Type;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public final class Module {
     private String name;
     private Map<String, Integer> dependencies;
     private List<Function> functions;
+    private Map<String, GlobalVariable> globals;
     private List<Function> constructors;
     private Map<String, Integer> strings;
 
@@ -41,6 +41,7 @@ public final class Module {
         this.name = name;
         this.dependencies = new HashMap<>();
         this.functions = new ArrayList<>();
+        this.globals = new HashMap<>();
         this.constructors = new ArrayList<>();
         this.strings = new HashMap<>();
     }
@@ -55,6 +56,10 @@ public final class Module {
 
     public List<Function> getFunctions() {
         return functions;
+    }
+
+    public Map<String, GlobalVariable> getGlobals() {
+        return globals;
     }
 
     public List<Function> getConstructors() {
@@ -74,6 +79,10 @@ public final class Module {
         dependencies.put(name, constPoolOffset++);
     }
 
+    public int getImport(String name) {
+        return dependencies.getOrDefault(name, 0);
+    }
+
     public Function getFunction(int id) {
         return functions.get(id);
     }
@@ -89,6 +98,24 @@ public final class Module {
 
     public void insertFunction(Function func) {
         functions.add(func);
+    }
+
+    public void insertGlobal(String name, Type type) {
+        globals.put(name, new GlobalVariable(this, type, false, name));
+    }
+
+    public GlobalVariable getGlobal(String name) {
+        return globals.get(name);
+    }
+
+    public GlobalVariable getOrInsertGlobal(String name, Type type) {
+        GlobalVariable global = globals.get(name);
+        if (global == null) {
+            global = new GlobalVariable(this, type, false, name);
+            globals.put(name, global);
+        }
+
+        return global;
     }
 
     public void insertConstructor(Function constructor) {
@@ -121,6 +148,19 @@ public final class Module {
 
     public void print(PrintStream stream) {
         stream.printf("module \"%s\"", name);
+
+        if (!globals.isEmpty()) {
+            stream.print("\n\n");
+        }
+
+        for (Iterator<GlobalVariable> it = globals.values().iterator(); it.hasNext(); ) {
+            GlobalVariable global = it.next();
+            global.print(stream);
+            if (global.prints && it.hasNext()) {
+                stream.println();
+            }
+        }
+
         for (Function func : functions) {
             func.print(stream);
         }
@@ -149,13 +189,29 @@ public final class Module {
     public void emit(OutputStream stream) throws IOException {
         List<AsmValue> values = new ArrayList<>();
 
+        values.add(new Label(".data"));
+        for (GlobalVariable global : globals.values()) {
+            global.emit(values);
+        }
+
         for (Function function : functions) {
             function.emit(values);
         }
 
-        // .constructor function
-        if (!constructors.isEmpty()) {
+        if (!dependencies.isEmpty() || !globals.isEmpty() || !constructors.isEmpty()) { // .constructor function
             values.add(new FunctionInstructionFake(".constructor"));
+
+            for (Map.Entry<String, Integer> dependency : dependencies.entrySet()) {
+                String str = dependency.getKey();
+
+                if (!hasString(str)) {
+                    values.add(new ConstantPoolFake(new StringOperand(str)));
+                    insertString(str);
+                }
+
+                values.add(new ModInstruction(Register.get("regA"), new ConstPoolEntryOperand(getString(str))));
+                values.add(new CstInstruction(new ConstPoolEntryOperand(dependency.getValue()), Register.get("regA")));
+            }
 
             for (Function func : constructors) {
                 values.add(new CallInstruction(new ConstPoolEntryOperand(0), func.getEmittedValue()));
@@ -164,40 +220,16 @@ public final class Module {
             values.add(new RetInstruction());
         }
 
+
         // .start function
         int mainFunction = getFunctionByName("main");
 
-        values.add(new FunctionInstructionFake(".start"));
-
-        for (Map.Entry<String, Integer> dependency : dependencies.entrySet()) {
-            String str = dependency.getKey();
-
-            if (!hasString(str)) {
-                values.add(new ConstantPoolFake(new StringOperand(str)));
-                insertString(str);
-            }
-
-            values.add(new ModInstruction(Register.get("regA"), new ConstPoolEntryOperand(getString(str))));
-            values.add(new CstInstruction(new ConstPoolEntryOperand(dependency.getValue()), Register.get("regA")));
-        }
-
         if (mainFunction != -1) {
+            values.add(new FunctionInstructionFake(".start"));
             values.add(new CallInstruction(new ConstPoolEntryOperand(0), getFunctionEmittedValue(mainFunction)));
             values.add(new MovInstruction(Register.get("regC"), Register.get("regE")));
-        } else {
-            String str = "No main function was located in this module\n";
-
-            if (!hasString(str)) {
-                values.add(new ConstantPoolFake(new StringOperand(str)));
-                insertString(str);
-            }
-
-            values.add(new MovInstruction(Register.get("regC"), new ConstPoolEntryOperand(getString(str))));
-            values.add(new IntInstruction(0x04)); // 0x04 = write, https://docs.google.com/spreadsheets/d/1hRenVVeyh3f27tRenfae8wAnFxkpI1cn3Jle5Rtt5TA/edit?usp=sharing
-            values.add(new MovInstruction(Register.get("regC"), new Immediate(-1)));
+            values.add(new IntInstruction(0x01)); // 0x01 = exit
         }
-
-        values.add(new IntInstruction(0x01)); // 0x01 = exit
 
         OutputBuffer output = new OutputBuffer(name);
         OpcodeBuilder builder = new OpcodeBuilder(output);

@@ -15,7 +15,7 @@ public final class FreInstruction extends SingleOperandInstruction {
 
     @Override
     public void print(PrintStream stream) {
-        stream.println("    fre " + operand);
+        stream.println("    fre " + operand.ident());
     }
 
     @Override

@@ -8,6 +8,11 @@ public final class StringType extends cum.jesus.cts.type.Type {
     }
 
     @Override
+    public boolean isStringType() {
+        return true;
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return obj instanceof StringType;
     }

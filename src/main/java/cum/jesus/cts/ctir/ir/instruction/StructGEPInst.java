@@ -2,8 +2,12 @@ package cum.jesus.cts.ctir.ir.instruction;
 
 import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Operand;
+import cum.jesus.cts.asm.instruction.operand.Immediate;
 import cum.jesus.cts.asm.instruction.operand.Memory;
 import cum.jesus.cts.asm.instruction.operand.Register;
+import cum.jesus.cts.asm.instruction.threeoperandinstruction.AddInstruction;
+import cum.jesus.cts.asm.instruction.twooperandinstruction.LodInstruction;
+import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Value;
 import cum.jesus.cts.ctir.type.PointerType;
@@ -27,7 +31,7 @@ public final class StructGEPInst extends Instruction {
         super(parent.getParent().getModule(), parent, id);
         super.type = Type.getPointerType(((StructType) type.getPointerElementType()).getFieldTypes().get(memberIndex));
 
-        this.structType = type.getPointerElementType();
+        this.structType = type;
         this.structPtr = structPtr.getId();
         this.memberIndex = memberIndex;
         this.name = name;
@@ -35,7 +39,7 @@ public final class StructGEPInst extends Instruction {
 
     @Override
     public boolean requiresRegister() {
-        return false;
+        return true;
     }
 
     @Override
@@ -57,18 +61,39 @@ public final class StructGEPInst extends Instruction {
     public void emit(List<AsmValue> values) {
         Operand ptrOperand = parent.getEmittedValue(structPtr);
 
-        StructType structType = (StructType) this.structType;
-        short requiredLookupOffset = 0;
-        for (int i = 0; i < memberIndex; i++) {
-            requiredLookupOffset += (short) structType.getFieldTypes().get(i).getSize();
-        }
+        if (this.structType.isStructType()) {
+            StructType structType = (StructType) this.structType;
+            short requiredLookupOffset = 0;
+            for (int i = 0; i < memberIndex; i++) {
+                requiredLookupOffset += (short) structType.getFieldTypes().get(i).getSize();
+            }
 
-        if (ptrOperand instanceof Memory) {
-            requiredLookupOffset += ((Memory) ptrOperand).getOffset();
-            emittedValue = new Memory(((Memory) ptrOperand).getReg(), requiredLookupOffset);
+            if (ptrOperand instanceof Memory) {
+                requiredLookupOffset += ((Memory) ptrOperand).getOffset();
+                emittedValue = new Memory(((Memory) ptrOperand).getReg(), requiredLookupOffset);
+            } else {
+                Register reg = (Register) ptrOperand;
+                emittedValue = new Memory(reg, requiredLookupOffset);
+            }
         } else {
-            Register reg = (Register) ptrOperand;
-            emittedValue = new Memory(reg, requiredLookupOffset);
+            PointerType pointerType = (PointerType) this.structType;
+            StructType structType = (StructType) pointerType.getBaseType();
+
+            short requiredLookupOffset = 0;
+            for (int i = 0; i < memberIndex; i++) {
+                requiredLookupOffset += (short) structType.getFieldTypes().get(i).getSize();
+            }
+
+            if (requiredLookupOffset != 0) {
+                values.add(new AddInstruction(Register.get(register), ptrOperand, new Immediate(requiredLookupOffset)));
+            } else {
+                if (ptrOperand instanceof Memory) {
+                    values.add(new LodInstruction(Register.get(register), ptrOperand));
+                } else {
+                    values.add(new MovInstruction(Register.get(register), ptrOperand));
+                }
+            }
+            emittedValue = new Memory(Register.get(register));
         }
     }
 }

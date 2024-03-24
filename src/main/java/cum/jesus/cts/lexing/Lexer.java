@@ -17,8 +17,12 @@ public final class Lexer {
         put("func", TokenType.KEYWORD_FUNC);
         put("return", TokenType.KEYWORD_RETURN);
         put("struct", TokenType.KEYWORD_STRUCT);
+        put("new", TokenType.KEYWORD_NEW);
+        put("delete", TokenType.KEYWORD_DELETE);
         put("if", TokenType.KEYWORD_IF);
         put("else", TokenType.KEYWORD_ELSE);
+        put("for", TokenType.KEYWORD_FOR);
+        put("while", TokenType.KEYWORD_WHILE);
     }};
 
     private static final Map<String, TokenType> builtins = new HashMap<String, TokenType>() {{
@@ -55,6 +59,10 @@ public final class Lexer {
             }
 
             String str = sb.toString();
+
+            if (str.startsWith("_Z")) {
+                throw new RuntimeException("'_Z' is a reserved identifier prefix for the compiler name mangling");
+            }
 
             if (keywords.containsKey(str)) {
                 return Optional.of(new Token(startLocation, keywords.get(str), str));

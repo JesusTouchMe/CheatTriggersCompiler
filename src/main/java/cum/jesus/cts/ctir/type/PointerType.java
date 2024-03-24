@@ -17,7 +17,19 @@ public final class PointerType extends Type {
     }
 
     @Override
+    public boolean isPointerType() {
+        return true;
+    }
+
+    @Override
     public Type getPointerElementType() {
         return base;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o instanceof ArrayType && ((ArrayType) o).getBase().equals(base)) return true;
+        return o instanceof PointerType && ((PointerType) o).base.equals(base);
     }
 }

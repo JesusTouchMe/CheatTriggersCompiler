@@ -1,11 +1,13 @@
 package cum.jesus.cts.ctir.ir;
 
+import cum.jesus.cts.ctir.Module;
 import cum.jesus.cts.ctir.ir.constant.ConstantInt;
 import cum.jesus.cts.ctir.ir.constant.ConstantString;
 import cum.jesus.cts.ctir.ir.instruction.*;
 import cum.jesus.cts.ctir.ir.misc.InlineAsm;
 import cum.jesus.cts.ctir.ir.misc.SaveStackOffset;
 import cum.jesus.cts.ctir.ir.misc.SetStackOffset;
+import cum.jesus.cts.ctir.type.FunctionType;
 import cum.jesus.cts.ctir.type.Type;
 
 import java.util.List;
@@ -31,13 +33,13 @@ public final class Builder {
         return ret;
     }
 
-    public CallInst createCall(Value callee, List<Value> parameters, String name) {
+    public CallInst createCall(Module module, FunctionType functionType, Value callee, List<Value> parameters, String name) {
         int id = insertPoint.getParent().getValueCount();
         if (name.isEmpty()) {
             name = String.valueOf(id);
         }
 
-        CallInst call = new CallInst(insertPoint, id, name, callee, parameters);
+        CallInst call = new CallInst(insertPoint, id, name, module, functionType, callee, parameters);
 
         insertPoint.insertValue(call);
         insertPoint.getParent().addValue(call);
@@ -45,8 +47,8 @@ public final class Builder {
         return call;
     }
 
-    public CallInst createCall(Value callee, List<Value> parameters) {
-        return createCall(callee, parameters, "");
+    public CallInst createCall(Module module, FunctionType functionType, Value callee, List<Value> parameters) {
+        return createCall(module, functionType, callee, parameters, "");
     }
 
     public AllocaInst createAlloca(Type allocatedType, String name) {
@@ -65,6 +67,53 @@ public final class Builder {
 
     public AllocaInst createAlloca(Type allocatedType) {
         return createAlloca(allocatedType, "");
+    }
+
+    public MallocInst createMalloc(Type allocatedType, Value count, String name) {
+        int id = insertPoint.getParent().getValueCount();
+        if (name.isEmpty()) {
+            name = String.valueOf(id);
+        }
+
+        MallocInst malloc = new MallocInst(insertPoint, id, allocatedType, count, name);
+
+        insertPoint.insertValue(malloc);
+        insertPoint.getParent().addValue(malloc);
+
+        return malloc;
+    }
+
+    public MallocInst createMalloc(Type allocatedType, Value count) {
+        return createMalloc(allocatedType, count, "");
+    }
+
+    public FreeInst createFree(Value ptr) {
+        int id = insertPoint.getParent().getValueCount();
+
+        FreeInst free = new FreeInst(insertPoint, id, ptr);
+
+        insertPoint.insertValue(free);
+        insertPoint.getParent().addValue(free);
+
+        return free;
+    }
+
+    public AddrOfInst createAddrOf(AllocaInst alloca, String name) {
+        int id = insertPoint.getParent().getValueCount();
+        if (name.isEmpty()) {
+            name = String.valueOf(id);
+        }
+
+        AddrOfInst addr = new AddrOfInst(insertPoint, id, alloca, name);
+
+        insertPoint.insertValue(addr);
+        insertPoint.getParent().addValue(addr);
+
+        return addr;
+    }
+
+    public AddrOfInst createAddrOf(AllocaInst alloca) {
+        return createAddrOf(alloca, "");
     }
 
     public StoreInst createStore(Value ptr, Value value) {
@@ -93,6 +142,24 @@ public final class Builder {
 
     public LoadInst createLoad(Value ptr) {
         return createLoad(ptr, "");
+    }
+
+    public ArrayGEPInst createGEP(Type type, Value ptr, Value index, String name) {
+        int id = insertPoint.getParent().getValueCount();
+        if (name.isEmpty()) {
+            name = String.valueOf(id);
+        }
+
+        ArrayGEPInst gep = new ArrayGEPInst(insertPoint, id, type, ptr, index, name);
+
+        insertPoint.insertValue(gep);
+        insertPoint.getParent().addValue(gep);
+
+        return gep;
+    }
+
+    public ArrayGEPInst createGEP(Type type, Value ptr, Value index) {
+        return createGEP(type, ptr, index, "");
     }
 
     public StructGEPInst createStructGEP(Type type, Value structPtr, int memberIndex, String name) {
@@ -351,31 +418,10 @@ public final class Builder {
         return createNeg(operand, "");
     }
 
-    public ConstantInt createConstantInt(long value, Type type, String name) {
-        int id = insertPoint.getParent().getValueCount();
-        if (name.isEmpty()) {
-            name = String.valueOf(id);
-        }
-
-        ConstantInt constant = new ConstantInt(insertPoint, id, value, type, name);
-
-        insertPoint.insertValue(constant);
-        insertPoint.getParent().addValue(constant);
-
-        return constant;
-    }
-
     public ConstantInt createConstantInt(long value, Type type) {
-        return createConstantInt(value, type, "");
-    }
-
-    public ConstantString createConstantString(String value, Type type, String name) {
         int id = insertPoint.getParent().getValueCount();
-        if (name.isEmpty()) {
-            name = String.valueOf(id);
-        }
 
-        ConstantString constant = new ConstantString(insertPoint, id, value, type, name);
+        ConstantInt constant = new ConstantInt(insertPoint, id, value, type);
 
         insertPoint.insertValue(constant);
         insertPoint.getParent().addValue(constant);
@@ -384,7 +430,14 @@ public final class Builder {
     }
 
     public ConstantString createConstantString(String value, Type type) {
-        return createConstantString(value, type, "");
+        int id = insertPoint.getParent().getValueCount();
+
+        ConstantString constant = new ConstantString(insertPoint, id, value, type);
+
+        insertPoint.insertValue(constant);
+        insertPoint.getParent().addValue(constant);
+
+        return constant;
     }
 
     public InlineAsm createInlineAsm(String asmCode, List<Value> params) {

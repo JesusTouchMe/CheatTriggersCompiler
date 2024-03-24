@@ -15,15 +15,12 @@ import java.util.List;
 
 public final class ConstantString extends Constant {
     private String value;
-    private String name;
 
-    public ConstantString(Block parent, int id, String value, Type type, String name) {
-        super(parent.getParent().getModule(), id);
+    public ConstantString(Block parent, int id, String value, Type type) {
+        super(parent, id);
+        super.type = type;
 
         this.value = value;
-        this.name = name;
-
-        super.type = type;
     }
 
     public String getValue() {
@@ -42,12 +39,12 @@ public final class ConstantString extends Constant {
 
     @Override
     public void print(PrintStream stream) {
-        stream.printf("%%%s = %s %s", name, type.getName(), value);
+        prints = false;
     }
 
     @Override
     public String ident() {
-        return String.format("%s %%%s", type.getName(), name);
+        return String.format("%s \"%s\"", type.getName(), value);
     }
 
     @Override

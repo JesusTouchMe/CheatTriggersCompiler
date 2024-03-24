@@ -37,7 +37,7 @@ public final class NativeFunction extends AstNode {
         FunctionType functionType = FunctionType.get(returnType.getIRType(), argTypes);
         Function function = Function.create(functionType, module, name);
 
-        Environment.functions.put(name, function);
+        scope.functions.put(name, function);
 
         return function;
     }

@@ -16,6 +16,8 @@ public abstract class Value {
     protected Type type;
     protected Operand emittedValue;
 
+    public boolean prints = true;
+
     protected List<Pair<Integer, Boolean>> edges;
     public int color = -1;
     protected String register = "";
@@ -24,6 +26,10 @@ public abstract class Value {
         this.module = module;
         this.id = id;
         this.edges = new ArrayList<>();
+    }
+
+    public Module getModule() {
+        return module;
     }
 
     public Type getType() {

@@ -44,7 +44,7 @@ public final class Builder<T extends AsmValue> {
                     Constructor<T> constructor = clazz.getDeclaredConstructor(int.class, int.class, int.class, int.class);
                     Operand operand = parseOperand();
                     if (!(operand instanceof Immediate)) {
-                        errorReporter.reportError(new ErrorContext(fileName, "Can only use immediate on 'int' instruction", current()));
+                        errorReporter.fatal(new ErrorContext(fileName, "Can only use immediate on 'int' instruction", current()));
                         return null; // happy intellij
                     }
                     Immediate imm = (Immediate) operand;
@@ -212,7 +212,7 @@ public final class Builder<T extends AsmValue> {
     private void expectToken(TokenType type, String context) {
         Token token = current();
         if (token.getType() != type) {
-            errorReporter.reportError(new ErrorContext(fileName, context, token));
+            errorReporter.fatal(new ErrorContext(fileName, context, token));
         }
     }
 

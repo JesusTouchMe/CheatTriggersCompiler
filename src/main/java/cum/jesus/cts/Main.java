@@ -23,50 +23,56 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        System.out.println(args[0]);
-        File input = new File(args[0]);
-
-        if (!input.canRead()) {
-            throw new IOException("Cannot read input file");
-        }
-
-        File graphout = new File("ctir.dot");
-        if (graphout.exists()) {
-            graphout.delete();
-        }
-
-        graphout = null; // let the gc remove the file cuz we don't need it
-
         Type.init();
 
-        String text = new String(Files.readAllBytes(input.toPath()));
-        Lexer lexer = new Lexer(text);
-        List<Token> tokens = lexer.tokenize();
+        for (String arg : args) {
+            File input = new File(arg);
 
-        Environment globalScope = new Environment();
+            if (!input.canRead()) {
+                throw new IOException("Cannot read input file");
+            }
 
-        Parser parser = new Parser(tokens, globalScope);
-        AbstractSyntaxTree ast = parser.parse();
+            File graphout = new File("ctir.dot");
+            if (graphout.exists()) {
+                graphout.delete();
+            }
 
-        Module module = new Module(input.getName());
-        Builder builder = new Builder();
+            graphout = null; // let the gc remove the file cuz we don't need it
 
-        ast.print(System.out);
-        ast.emit(module, builder, globalScope);
+            String text = new String(Files.readAllBytes(input.toPath()));
+            Lexer lexer = new Lexer(text);
+            List<Token> tokens = lexer.tokenize();
 
-        module.print(System.out);
-        System.out.println();
-        module.optimize(OptimizationLevel.HIGH);
+            Environment globalScope = new Environment();
 
-        File output = new File(args[0].substring(0, args[0].length() - 1));
-        if (!output.exists()) {
-            output.createNewFile();
+            ErrorReporter errorReporter = new DefaultErrorReporter();
+            Parser parser = new Parser(arg, tokens, globalScope, errorReporter);
+            AbstractSyntaxTree ast = parser.parse();
+
+            errorReporter.spit();
+
+            Module module = new Module(input.getName());
+            Builder builder = new Builder();
+
+            ast.print(System.out);
+            ast.emit(module, builder, globalScope);
+
+            module.print(System.out);
+            System.out.println();
+            module.optimize(OptimizationLevel.HIGH);
+
+            File output = new File(arg.substring(0, arg.length() - 1));
+            if (!output.exists()) {
+                output.createNewFile();
+            }
+            if (!output.canWrite()) {
+                throw new IOException("Cannot write to output file");
+            }
+
+            module.emit(new FileOutputStream(output, false));
+
+            System.out.println();
         }
-        if (!output.canWrite()) {
-            throw new IOException("Cannot write to output file");
-        }
-
-        module.emit(new FileOutputStream(output, false));
     }
 
     private static void asm() throws IOException {

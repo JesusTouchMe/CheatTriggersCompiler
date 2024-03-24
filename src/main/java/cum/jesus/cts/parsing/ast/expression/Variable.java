@@ -3,6 +3,7 @@ package cum.jesus.cts.parsing.ast.expression;
 import cum.jesus.cts.ctir.Module;
 import cum.jesus.cts.ctir.ir.Builder;
 import cum.jesus.cts.ctir.ir.Function;
+import cum.jesus.cts.ctir.ir.GlobalVariable;
 import cum.jesus.cts.ctir.ir.Value;
 import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.environment.LocalSymbol;
@@ -29,21 +30,25 @@ public final class Variable extends AstNode {
 
     @Override
     public Value emit(Module module, Builder builder, Environment scope) {
-        Function function = Environment.functions.get(name);
-        if (function != null) {
-            return function;
+        Optional<Function> function = scope.findFunction(name);
+        if (function.isPresent()) {
+            return function.get();
         }
 
         Optional<LocalSymbol> variable = scope.findVariable(name);
-        if (!variable.isPresent()) {
-            throw UnreachableStatementException.INSTANCE; // this condition is prevented by the parser but yk it's nice to have
+        if (variable.isPresent()) {
+            AtomicReference<Value> value = new AtomicReference<>();
+            variable.get().alloca.consume(value::set, value::set);
+
+            return builder.createLoad(value.get());
         }
 
-        AtomicReference<Value> value = new AtomicReference<>();
-        // return builder.createLoad(variable.get().alloca);
-        variable.get().alloca.consume(value::set, value::set);
+        GlobalVariable global = module.getGlobal(name);
+        if (global == null) {
+            throw UnreachableStatementException.INSTANCE;
+        }
 
-        return builder.createLoad(value.get()); //TODO: decide when to load and when to return straight up value
+        return builder.createLoad(global);
     }
 
     @Override

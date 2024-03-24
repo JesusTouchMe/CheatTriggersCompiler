@@ -10,15 +10,7 @@ public final class FunctionType extends Type {
     FunctionType(Type returnType, List<Type> arguments) {
         super(0, returnType.name + "()");
         this.returnType = returnType;
-        this.arguments = new ArrayList<>();
-
-        for (Type arg : arguments) {
-            if (arg instanceof StructType) {
-                this.arguments.addAll(((StructType) arg).getFieldTypes());
-            } else {
-                this.arguments.add(arg);
-            }
-        }
+        this.arguments = new ArrayList<>(arguments);
     }
 
     public static FunctionType get(Type returnType, List<Type> arguments) {
@@ -31,5 +23,9 @@ public final class FunctionType extends Type {
 
     public List<Type> getArguments() {
         return arguments;
+    }
+
+    public Type getArgument(int i) {
+        return arguments.get(i);
     }
 }

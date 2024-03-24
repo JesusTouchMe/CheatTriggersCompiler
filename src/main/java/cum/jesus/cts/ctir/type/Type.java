@@ -26,6 +26,30 @@ public abstract class Type {
         return name;
     }
 
+    public boolean isIntegerType() {
+        return false;
+    }
+
+    public boolean isPointerType() {
+        return false;
+    }
+
+    public boolean isVoidType() {
+        return false;
+    }
+
+    public boolean isStringType() {
+        return false;
+    }
+
+    public boolean isStructType() {
+        return false;
+    }
+
+    public boolean isArrayType() {
+        return false;
+    }
+
     public Type getPointerElementType() {
         return this;
     }
@@ -73,6 +97,17 @@ public abstract class Type {
         }
 
         types.add(new PointerType(base));
+        return types.get(types.size() - 1);
+    }
+
+    public static Type getArrayType(Type base, int length) {
+        for (Type type : types) {
+            if (type instanceof ArrayType && ((ArrayType) type).getBase().equals(base) && ((ArrayType) type).getLength() == length) {
+                return type;
+            }
+        }
+
+        types.add(new ArrayType(base, length));
         return types.get(types.size() - 1);
     }
 

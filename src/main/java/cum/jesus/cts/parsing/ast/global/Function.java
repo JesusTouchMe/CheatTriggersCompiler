@@ -6,20 +6,23 @@ import cum.jesus.cts.ctir.ir.Builder;
 import cum.jesus.cts.ctir.ir.Value;
 import cum.jesus.cts.ctir.ir.instruction.AllocaInst;
 import cum.jesus.cts.ctir.type.FunctionType;
+import cum.jesus.cts.ctir.type.PointerType;
 import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.environment.LocalSymbol;
 import cum.jesus.cts.parsing.ast.AstNode;
 import cum.jesus.cts.parsing.ast.statement.ReturnStatement;
-import cum.jesus.cts.type.StructType;
 import cum.jesus.cts.type.Type;
+import cum.jesus.cts.util.NameManglingUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 public final class Function extends AstNode {
     private Type returnType;
     private String name;
+    private String mangledName;
     private List<FunctionArgument> args;
     private List<AstNode> body;
     private Environment scope;
@@ -38,6 +41,13 @@ public final class Function extends AstNode {
         this.args = args;
         this.body = body;
         this.scope = scope;
+
+        List<Type> argTypes = new ArrayList<>();
+        for (FunctionArgument arg : args) {
+            argTypes.add(arg.getType());
+        }
+
+        mangledName = NameManglingUtils.mangleFunction(Collections.singletonList(name), argTypes, returnType);
     }
 
     public Function singleStatement() {
@@ -46,15 +56,20 @@ public final class Function extends AstNode {
     }
 
     @Override
-    public Value emit(Module module, Builder builder, Environment __) {
+    public Value emit(Module module, Builder builder, Environment global) {
         List<cum.jesus.cts.ctir.type.Type> argTypes = new ArrayList<>();
         for (FunctionArgument arg : args) {
             argTypes.add(arg.getType().getIRType());
         }
 
         FunctionType functionType = FunctionType.get(returnType.getIRType(), argTypes);
-        cum.jesus.cts.ctir.ir.Function function = cum.jesus.cts.ctir.ir.Function.create(functionType, module, name);
-        Environment.functions.put(name, function);
+        //TODO: check for declared functions to do funny stuffs
+        cum.jesus.cts.ctir.ir.Function function = cum.jesus.cts.ctir.ir.Function.create(functionType, module, mangledName);
+        global.functions.put(mangledName, function);
+
+        for (int i = 0; i < function.getArgs().size(); i++) {
+            function.getArgument(i).setName(args.get(i).getName());
+        }
 
         Block entry = Block.create("", function);
         builder.setInsertPoint(entry);
@@ -63,18 +78,9 @@ public final class Function extends AstNode {
             for (int j = 0; j < args.size(); j++) {
                 FunctionArgument arg = args.get(j);
                 if (j < 4) {
-                    AllocaInst alloca = builder.createAlloca(arg.getType().getIRType());
+                    AllocaInst alloca = arg.getType().isStructType() ? builder.createAlloca(PointerType.get(arg.getType().getIRType())) : builder.createAlloca(arg.getType().getIRType());
                     scope.variables.put(arg.getName(), new LocalSymbol(alloca, arg.getType()));
-                    //builder.createStore(alloca, function.getArgument(j));
-                    if (arg.getType().isStructType()) {
-                        StructType structType = (StructType) arg.getType();
-                        for (int i = 0; i < structType.getBody().size(); i++) {
-                            Value gep = builder.createStructGEP(structType.getIRType(), alloca, i);
-                            builder.createStore(gep, function.getArgument(j + i));
-                        }
-                    } else {
-                        builder.createStore(alloca, function.getArgument(j));
-                    }
+                    builder.createStore(alloca, function.getArgument(j));
                 } else {
                     scope.variables.put(arg.getName(), new LocalSymbol(function.getArgument(j), arg.getType()));
                 }

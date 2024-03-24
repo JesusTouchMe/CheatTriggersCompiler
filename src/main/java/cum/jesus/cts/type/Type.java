@@ -1,5 +1,7 @@
 package cum.jesus.cts.type;
 
+import cum.jesus.cts.ctir.type.ArrayType;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,6 +24,61 @@ public class Type {
 
     public boolean isStructType() {
         return false;
+    }
+
+    public boolean isArrayType() {
+        return false;
+    }
+
+    public boolean isStringType() {
+        return false;
+    }
+
+    public String getMangleID() {
+        if (irType.isIntegerType()) {
+            switch (((cum.jesus.cts.ctir.type.IntegerType) irType).getSizeInBits()) {
+                case 64:
+                    return "l";
+                case 32:
+                    return "i";
+                case 16:
+                    return "s";
+                case 8:
+                    return "b";
+                case 1:
+                    return "Z";
+            }
+        }
+
+        if (irType.isPointerType()) {
+            return new Type(irType.getPointerElementType()).getMangleID() + "&";
+        }
+
+        if (irType.isVoidType()) {
+            return "V";
+        }
+
+        if (irType.isArrayType()) {
+            return "[" + ((ArrayType) irType).getLength() + new Type(irType.getPointerElementType()).getMangleID();
+        }
+
+        if (irType.isStructType()) {
+            String name = irType.getName();
+            if (name.contains(".")) {
+                name = name.substring(0, name.indexOf('.'));
+            }
+            return "S" + name.length() + name;
+        }
+
+        if (irType.isStringType()) {
+            return "b&"; // 'b' is the mangle id for 8-bit integer and '&' if the suffix for a pointer or array reference and strings are array references to bytes
+        }
+
+        return "ERROR";
+    }
+
+    public Type getBase() {
+        return this;
     }
 
     public static void init() {
