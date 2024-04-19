@@ -1,6 +1,7 @@
 package cum.jesus.cts.asm.instruction;
 
 import cum.jesus.cts.asm.instruction.fakes.ConstantPoolFake;
+import cum.jesus.cts.asm.instruction.fakes.FakeFunctionHandleOperand;
 import cum.jesus.cts.asm.instruction.fakes.FunctionInstructionFake;
 import cum.jesus.cts.asm.instruction.operand.*;
 import cum.jesus.cts.asm.instruction.singleoperandinstruction.IntInstruction;
@@ -43,7 +44,7 @@ public final class Builder<T extends AsmValue> {
                     Constructor<T> constructor = clazz.getDeclaredConstructor(int.class, int.class, int.class, int.class);
                     Operand operand = parseOperand();
                     if (!(operand instanceof Immediate)) {
-                        errorReporter.reportError(new ErrorContext(fileName, "Can only use immediate on 'int' instruction", current()));
+                        errorReporter.fatal(new ErrorContext(fileName, "Can only use immediate on 'int' instruction", current()));
                         return null; // happy intellij
                     }
                     Immediate imm = (Immediate) operand;
@@ -99,7 +100,13 @@ public final class Builder<T extends AsmValue> {
             }
         } else if (clazz == ConstantPoolFake.class) {
             try {
-                return clazz.getDeclaredConstructor(Operand.class).newInstance(parseOperand());
+                Operand operand = parseOperand();
+
+                if (operand instanceof LabelOperand) {
+                    return clazz.getDeclaredConstructor(Operand.class).newInstance(new FakeFunctionHandleOperand(((LabelOperand) operand).getName()));
+                }
+
+                return clazz.getDeclaredConstructor(Operand.class).newInstance(operand);
             } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException |
                      InstantiationException e) {
                 throw new RuntimeException(e);
@@ -205,7 +212,7 @@ public final class Builder<T extends AsmValue> {
     private void expectToken(TokenType type, String context) {
         Token token = current();
         if (token.getType() != type) {
-            errorReporter.reportError(new ErrorContext(fileName, context, token));
+            errorReporter.fatal(new ErrorContext(fileName, context, token));
         }
     }
 

@@ -1,13 +1,15 @@
 package cum.jesus.cts.type;
 
-public final class StringType extends Type {
+import cum.jesus.cts.ctir.type.Type;
+
+public final class StringType extends cum.jesus.cts.type.Type {
     public StringType() {
-        super("string");
+        super(Type.getStringType());
     }
 
     @Override
-    public int getSize() {
-        return 128; // this is only for the string structure which has a 64 bit size and a 64 bit pointer. can vary depending on the vm
+    public boolean isStringType() {
+        return true;
     }
 
     @Override

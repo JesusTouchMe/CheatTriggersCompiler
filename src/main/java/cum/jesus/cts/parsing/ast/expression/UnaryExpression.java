@@ -6,14 +6,19 @@ import cum.jesus.cts.ctir.ir.Value;
 import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.lexing.TokenType;
 import cum.jesus.cts.parsing.ast.AstNode;
+import cum.jesus.cts.type.Type;
 import cum.jesus.cts.util.exceptions.UnreachableStatementException;
+
+import java.util.List;
 
 public final class UnaryExpression extends AstNode {
     private AstNode operand;
     private Operator operator;
 
-    public UnaryExpression(AstNode operand, TokenType operator) {
+    public UnaryExpression(List<String> annotations, AstNode operand, TokenType operator) {
+        super(annotations);
         this.operand = operand;
+
         switch (operator) {
             case PLUS:
                 this.operator = Operator.POSITIZE;
@@ -21,13 +26,39 @@ public final class UnaryExpression extends AstNode {
             case MINUS:
                 this.operator = Operator.NEGATE;
                 break;
+            case KEYWORD_NEW:
+                this.operator = Operator.NEW;
+                break;
+            case KEYWORD_DELETE:
+                this.operator = Operator.DELETE;
+                break;
 
             default:
-                // TODO: error here
-                break;
+                throw new RuntimeException("Unknown operator");
         }
 
-        type = operand.getType();
+        switch (this.operator) {
+            case POSITIZE:
+            case NEGATE:
+                type = operand.getType();
+                break;
+
+            case NEW:
+                type = Type.get(((Variable) operand).getName());
+                break;
+
+            case DELETE:
+                type = Type.get("void");
+                break;
+        }
+    }
+
+    public AstNode getOperand() {
+        return operand;
+    }
+
+    public Operator getOperator() {
+        return operator;
     }
 
     @Override
@@ -39,6 +70,10 @@ public final class UnaryExpression extends AstNode {
                 return builder.createPos(operandValue);
             case NEGATE:
                 return builder.createNeg(operandValue);
+            case NEW:
+                return operandValue;
+            case DELETE:
+                return builder.createFree(operandValue);
         }
 
         throw UnreachableStatementException.INSTANCE;
@@ -61,7 +96,12 @@ public final class UnaryExpression extends AstNode {
 
     public enum Operator {
         POSITIZE("pos"),
-        NEGATE("neg");
+        NEGATE("neg"),
+
+        NEW("new"),
+        DELETE("del"),
+
+        ;
 
         private String str;
         Operator(String str) {

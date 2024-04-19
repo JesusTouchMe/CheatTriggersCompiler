@@ -7,16 +7,26 @@ import java.util.*;
 public final class Lexer {
     private String text;
     private int pos = 0;
+    private int line = 1;
+    private int column = 1;
 
     private static final Map<String, TokenType> keywords = new HashMap<String, TokenType>() {{
-       put("func", TokenType.KEYWORD_FUNC);
-       put("return", TokenType.KEYWORD_RETURN);
-       put("if", TokenType.KEYWORD_IF);
-       put("else", TokenType.KEYWORD_ELSE);
+        put("module", TokenType.KEYWORD_MODULE);
+        put("import", TokenType.KEYWORD_IMPORT);
+        put("native", TokenType.KEYWORD_NATIVE);
+        put("func", TokenType.KEYWORD_FUNC);
+        put("return", TokenType.KEYWORD_RETURN);
+        put("struct", TokenType.KEYWORD_STRUCT);
+        put("new", TokenType.KEYWORD_NEW);
+        put("delete", TokenType.KEYWORD_DELETE);
+        put("if", TokenType.KEYWORD_IF);
+        put("else", TokenType.KEYWORD_ELSE);
+        put("for", TokenType.KEYWORD_FOR);
+        put("while", TokenType.KEYWORD_WHILE);
     }};
 
     private static final Map<String, TokenType> builtins = new HashMap<String, TokenType>() {{
-       put("_code", TokenType.BUILTIN_CODE);
+        put("_code", TokenType.BUILTIN_CODE);
     }};
 
     public Lexer(String text) {
@@ -32,12 +42,14 @@ public final class Lexer {
             consume();
         }
 
-        tokens.add(new Token(TokenType.EOF, ""));
+        tokens.add(new Token(new SourceLocation(line, column), TokenType.EOF, ""));
 
         return tokens;
     }
 
     private Optional<Token> nextToken() {
+        SourceLocation startLocation = new SourceLocation(line, column);
+        
         if (Character.isLetter(current()) || current() == '_') {
             StringBuilder sb = new StringBuilder().append(current());
 
@@ -48,19 +60,23 @@ public final class Lexer {
 
             String str = sb.toString();
 
+            if (str.startsWith("_Z")) {
+                throw new RuntimeException("'_Z' is a reserved identifier prefix for the compiler name mangling");
+            }
+
             if (keywords.containsKey(str)) {
-                return Optional.of(new Token(keywords.get(str), str));
+                return Optional.of(new Token(startLocation, keywords.get(str), str));
             }
 
             if (builtins.containsKey(str)) {
-                return Optional.of(new Token(builtins.get(str), str));
+                return Optional.of(new Token(startLocation, builtins.get(str), str));
             }
 
             if (Type.exists(str)) {
-                return Optional.of(new Token(TokenType.TYPE, str));
+                return Optional.of(new Token(startLocation, TokenType.TYPE, str));
             }
 
-            return Optional.of(new Token(TokenType.IDENTIFIER, str));
+            return Optional.of(new Token(startLocation, TokenType.IDENTIFIER, str));
         }
 
         if (Character.isDigit(current())) {
@@ -71,7 +87,7 @@ public final class Lexer {
                 sb.append(current());
             }
 
-            return Optional.of(new Token(TokenType.INTEGER_LITERAL, sb.toString()));
+            return Optional.of(new Token(startLocation, TokenType.INTEGER_LITERAL, sb.toString()));
         }
 
         if (current() == '\n' || current() == '\r' || current() == ' ' || current() == '\t') {
@@ -80,46 +96,48 @@ public final class Lexer {
 
         switch (current()) {
             case '(':
-                return Optional.of(new Token(TokenType.LEFT_PAREN, "("));
+                return Optional.of(new Token(startLocation, TokenType.LEFT_PAREN, "("));
             case ')':
-                return Optional.of(new Token(TokenType.RIGHT_PAREN, ")"));
+                return Optional.of(new Token(startLocation, TokenType.RIGHT_PAREN, ")"));
 
             case '[':
-                return Optional.of(new Token(TokenType.LEFT_BRACKET, "["));
+                return Optional.of(new Token(startLocation, TokenType.LEFT_BRACKET, "["));
             case ']':
-                return Optional.of(new Token(TokenType.RIGHT_BRACKET, "]"));
+                return Optional.of(new Token(startLocation, TokenType.RIGHT_BRACKET, "]"));
 
             case '{':
-                return Optional.of(new Token(TokenType.LEFT_BRACE, "{"));
+                return Optional.of(new Token(startLocation, TokenType.LEFT_BRACE, "{"));
             case '}':
-                return Optional.of(new Token(TokenType.RIGHT_BRACE, "}"));
+                return Optional.of(new Token(startLocation, TokenType.RIGHT_BRACE, "}"));
 
             case '<':
                 if (peek(1) == '=') {
                     consume();
-                    return Optional.of(new Token(TokenType.LEFT_ANGLE_BRACKET_EQUALS, "<="));
+                    return Optional.of(new Token(startLocation, TokenType.LEFT_ANGLE_BRACKET_EQUALS, "<="));
                 }
 
-                return Optional.of(new Token(TokenType.LEFT_ANGLE_BRACKET, "<"));
+                return Optional.of(new Token(startLocation, TokenType.LEFT_ANGLE_BRACKET, "<"));
             case '>':
                 if (peek(1) == '=') {
                     consume();
-                    return Optional.of(new Token(TokenType.RIGHT_ANGLE_BRACKET_EQUALS, ">="));
+                    return Optional.of(new Token(startLocation, TokenType.RIGHT_ANGLE_BRACKET_EQUALS, ">="));
                 }
 
-                return Optional.of(new Token(TokenType.RIGHT_ANGLE_BRACKET, ">"));
+                return Optional.of(new Token(startLocation, TokenType.RIGHT_ANGLE_BRACKET, ">"));
 
             case ';':
-                return Optional.of(new Token(TokenType.SEMICOLON, ";"));
+                return Optional.of(new Token(startLocation, TokenType.SEMICOLON, ";"));
             case ',':
-                return Optional.of(new Token(TokenType.COMMA, ","));
+                return Optional.of(new Token(startLocation, TokenType.COMMA, ","));
+            case '.':
+                return Optional.of(new Token(startLocation, TokenType.DOT, "."));
 
             case '+':
-                return Optional.of(new Token(TokenType.PLUS, "+"));
+                return Optional.of(new Token(startLocation, TokenType.PLUS, "+"));
             case '-':
-                return Optional.of(new Token(TokenType.MINUS, "-"));
+                return Optional.of(new Token(startLocation, TokenType.MINUS, "-"));
             case '*':
-                return Optional.of(new Token(TokenType.STAR, "*"));
+                return Optional.of(new Token(startLocation, TokenType.STAR, "*"));
             case '/':
                 if (peek(1) == '/') {
                     while (current() != '\n') {
@@ -135,22 +153,28 @@ public final class Lexer {
                     return Optional.empty();
                 }
 
-                return Optional.of(new Token(TokenType.SLASH, "/"));
+                return Optional.of(new Token(startLocation, TokenType.SLASH, "/"));
             case '!':
                 if (peek(1) == '=') {
                     consume();
-                    return Optional.of(new Token(TokenType.BANG_EQUALS, "!="));
+                    return Optional.of(new Token(startLocation, TokenType.BANG_EQUALS, "!="));
                 }
 
-                return Optional.of(new Token(TokenType.BANG, "!"));
+                return Optional.of(new Token(startLocation, TokenType.BANG, "!"));
+
+            case '@':
+                return Optional.of(new Token(startLocation, TokenType.ASPERAND, "@"));
+
+            case '&':
+                return Optional.of(new Token(startLocation, TokenType.AMPERSAND, "&"));
 
             case '=':
                 if (peek(1) == '=') {
                     consume();
-                    return Optional.of(new Token(TokenType.DOUBLE_EQUALS, "<="));
+                    return Optional.of(new Token(startLocation, TokenType.DOUBLE_EQUALS, "<="));
                 }
 
-                return Optional.of(new Token(TokenType.EQUALS, "="));
+                return Optional.of(new Token(startLocation, TokenType.EQUALS, "="));
 
             case '"': {
                 consume();
@@ -176,7 +200,7 @@ public final class Lexer {
                                 sb.append('\0');
                                 break;
                             default:
-                                return Optional.of(new Token(TokenType.ERROR, String.valueOf(current())));
+                                return Optional.of(new Token(startLocation, TokenType.ERROR, String.valueOf(current())));
                         }
                     } else {
                         sb.append(current());
@@ -185,11 +209,11 @@ public final class Lexer {
                     consume();
                 }
 
-                return Optional.of(new Token(TokenType.STRING_LITERAL, sb.toString()));
+                return Optional.of(new Token(startLocation, TokenType.STRING_LITERAL, sb.toString()));
             }
         }
 
-        return Optional.of(new Token(TokenType.ERROR, String.valueOf(current())));
+        return Optional.of(new Token(startLocation, TokenType.ERROR, String.valueOf(current())));
     }
 
     private char current() {
@@ -197,7 +221,16 @@ public final class Lexer {
     }
 
     private char consume() {
-        return text.charAt(pos++);
+        char c = text.charAt(pos++);
+
+        if (c == '\n') {
+            column = 1;
+            line += 1;
+        } else {
+            column += 1;
+        }
+
+        return c;
     }
 
     private char peek(int offset) {

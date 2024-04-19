@@ -1,6 +1,7 @@
 package cum.jesus.cts.asm.lexing;
 
 import cum.jesus.cts.asm.instruction.operand.Register;
+import cum.jesus.cts.lexing.SourceLocation;
 import cum.jesus.cts.util.CharUtils;
 
 import java.util.ArrayList;
@@ -75,6 +76,7 @@ public final class Lexer {
     private static final HashSet<String> constPoolInstructions = new HashSet<String>() {{
         add("number");
         add("string");
+        add("function");
     }};
 
     public Lexer(String text) {

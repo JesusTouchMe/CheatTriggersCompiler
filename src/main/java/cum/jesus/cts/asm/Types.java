@@ -13,6 +13,12 @@ public enum Types {
      */
     FUNCTION(0x06),
 
+    /**
+     * Special type which causes the constant pool initializer to look back and clone the value at previous location.
+     * Only works for constants before the one created here
+     */
+    CONSTANT_LOAD(0x07);
+
     ;
 
     private final int typeCode;

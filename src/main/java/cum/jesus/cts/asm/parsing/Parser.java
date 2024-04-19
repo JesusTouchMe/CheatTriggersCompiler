@@ -99,6 +99,7 @@ public final class Parser {
         // they actually do the same either way lol but it's nicer having a sense of type control. number "hello world" is completely valid code but try not to do that :D
         constantPoolParsers.put("number", () -> new Builder<ConstantPoolFake>(fileName, errorReporter, specialOperandParser).parse(tokenStream, ConstantPoolFake.class));
         constantPoolParsers.put("string", () -> new Builder<ConstantPoolFake>(fileName, errorReporter, specialOperandParser).parse(tokenStream, ConstantPoolFake.class));
+        constantPoolParsers.put("function", () -> new Builder<ConstantPoolFake>(fileName, errorReporter, specialOperandParser).parse(tokenStream, ConstantPoolFake.class));
     }
     
     public Parser withSpecialOperandParser(Function<TokenStream, Operand> parser) {
@@ -120,7 +121,7 @@ public final class Parser {
         Token token = current();
         switch (token.getType()) {
             case ERROR:
-                errorReporter.reportError(new ErrorContext(fileName, "Unknown symbol", token));
+                errorReporter.fatal(new ErrorContext(fileName, "Unknown symbol", token));
                 break;
 
             case IDENTIFIER:
@@ -140,7 +141,7 @@ public final class Parser {
             }
 
             default:
-                errorReporter.reportError(new ErrorContext(fileName, "Expected statement, found '" + (token.getText().isEmpty() ? token.getType() : token.getText()) + "'.", token));
+                errorReporter.fatal(new ErrorContext(fileName, "Expected statement, found '" + (token.getText().isEmpty() ? token.getType() : token.getText()) + "'.", token));
                 break;
         }
 
@@ -150,7 +151,7 @@ public final class Parser {
     private void expectToken(TokenType type, String context) {
         Token token = current();
         if (token.getType() != type) {
-            errorReporter.reportError(new ErrorContext(fileName, context, token));
+            errorReporter.fatal(new ErrorContext(fileName, context, token));
         }
     }
 

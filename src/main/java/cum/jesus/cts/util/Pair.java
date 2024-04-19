@@ -2,11 +2,11 @@ package cum.jesus.cts.util;
 
 import java.util.Objects;
 
-public final class Pair<T1, T2> {
-    public T1 first;
-    public T2 second;
+public final class Pair<A, B> {
+    public A first;
+    public B second;
 
-    public Pair(T1 first, T2 second) {
+    public Pair(A first, B second) {
         this.first = first;
         this.second = second;
     }

@@ -30,7 +30,7 @@ public final class SetStackOffset extends Value {
 
     @Override
     public void print(PrintStream stream) {
-
+        prints = false;
     }
 
     @Override

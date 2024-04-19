@@ -1,13 +1,39 @@
 .data:
-    string "main"
-    string "hello world\n"
+    function five
+    function main
+
+five():
+    push regSB
+    mov regSB, regST
+    alca 4
+
+    str [regSB+1], regC
+    str [regSB+2], regD
+    str [regSB+3], regF
+    str [regSB+4], regG
+
+    add regE, [regSB-1], [regSB-2]
+    mov regST, regSB
+    pop regSB
+    ret
 
 main():
-    mov regC, #1
-    int 0x04000000
+    push regSB
+    mov regSB, regST
+
+    mov regC, 1
+    mov regD, 2
+    mov regF, 3
+    mov regG, 4
+    push 6
+    push 5
+    call #0, #1
+
+    mov regC, regE
+    int 0x05000000
     mov regE, 0
     ret
 
 .start():
-    call #0
+    call #0, #2
     int 0x01000000

@@ -4,23 +4,30 @@ import java.io.PrintStream;
 import java.util.Objects;
 
 public final class Token {
-    private final TokenType type;
+    private TokenType type;
     private final String text;
+    private final SourceLocation sourceLocation;
 
-    public Token(final TokenType type, final String text) {
-        Objects.requireNonNull(type);
-        Objects.requireNonNull(text);
-
-        this.type = type;
-        this.text = text;
+    public Token(final SourceLocation sourceLocation, final TokenType type, final String text) {
+        this.sourceLocation = Objects.requireNonNull(sourceLocation);
+        this.type = Objects.requireNonNull(type);
+        this.text = Objects.requireNonNull(text);
     }
 
     public TokenType getType() {
         return type;
     }
 
+    public void setType(TokenType type) {
+        this.type = type;
+    }
+
     public String getText() {
         return text;
+    }
+
+    public SourceLocation getSourceLocation() {
+        return sourceLocation;
     }
 
     public void printFull(PrintStream stream) {

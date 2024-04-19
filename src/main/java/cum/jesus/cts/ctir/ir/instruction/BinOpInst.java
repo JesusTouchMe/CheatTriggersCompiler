@@ -6,7 +6,7 @@ import cum.jesus.cts.asm.instruction.operand.Register;
 import cum.jesus.cts.asm.instruction.threeoperandinstruction.*;
 import cum.jesus.cts.ctir.ir.Block;
 import cum.jesus.cts.ctir.ir.Value;
-import cum.jesus.cts.type.Type;
+import cum.jesus.cts.ctir.type.Type;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -211,8 +211,6 @@ public final class BinOpInst extends Instruction {
                     emittedValue = lhs;
                 }
             } break;
-
-
         }
     }
 

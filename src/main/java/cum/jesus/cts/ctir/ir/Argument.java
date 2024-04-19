@@ -1,9 +1,10 @@
 package cum.jesus.cts.ctir.ir;
 
 import cum.jesus.cts.asm.instruction.AsmValue;
+import cum.jesus.cts.asm.instruction.operand.Memory;
 import cum.jesus.cts.asm.instruction.operand.Register;
 import cum.jesus.cts.ctir.Module;
-import cum.jesus.cts.type.Type;
+import cum.jesus.cts.ctir.type.Type;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -19,9 +20,17 @@ public final class Argument extends Value {
         this.name = name;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     @Override
     public boolean requiresRegister() {
-        return true;
+        return color > -1;
     }
 
     @Override
@@ -40,6 +49,10 @@ public final class Argument extends Value {
 
     @Override
     public void emit(List<AsmValue> values) {
-        emittedValue = Register.get(register);
+        if (color > -1) {
+            emittedValue = Register.get(register);
+        } else {
+            emittedValue = new Memory(new Register(Register.regStackBase), (short) color);
+        }
     }
 }

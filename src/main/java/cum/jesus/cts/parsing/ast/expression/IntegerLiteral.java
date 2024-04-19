@@ -7,16 +7,19 @@ import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.parsing.ast.AstNode;
 import cum.jesus.cts.type.Type;
 
+import java.util.List;
+
 public final class IntegerLiteral extends AstNode {
     private long value;
 
-    public IntegerLiteral(long value) {
+    public IntegerLiteral(List<String> annotations, long value) {
+        super(annotations);
         this.value = value;
 
         if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE) {
-            type = Type.getIntegerType(64);
+            type = Type.getLong();
         } else {
-            type = Type.getIntegerType(32);
+            type = Type.getInt();
         }
     }
 
@@ -26,7 +29,7 @@ public final class IntegerLiteral extends AstNode {
 
     @Override
     public Value emit(Module module, Builder builder, Environment scope) {
-        return builder.createConstantInt(value, type);
+        return builder.createConstantInt(value, type.getIRType());
     }
 
     @Override

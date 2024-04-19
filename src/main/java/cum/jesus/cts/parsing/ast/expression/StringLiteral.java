@@ -7,13 +7,16 @@ import cum.jesus.cts.environment.Environment;
 import cum.jesus.cts.parsing.ast.AstNode;
 import cum.jesus.cts.type.Type;
 
+import java.util.List;
+
 public final class StringLiteral extends AstNode {
     private String text;
 
-    public StringLiteral(String text) {
+    public StringLiteral(List<String> annotations, String text) {
+        super(annotations);
         this.text = text;
 
-        type = Type.getStringType();
+        type = Type.getString();
     }
 
     public String getText() {
@@ -22,7 +25,7 @@ public final class StringLiteral extends AstNode {
 
     @Override
     public Value emit(Module module, Builder builder, Environment scope) {
-        return builder.createConstantString(text, type);
+        return builder.createConstantString(text, type.getIRType());
     }
 
     @Override

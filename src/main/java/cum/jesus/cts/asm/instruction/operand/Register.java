@@ -60,4 +60,12 @@ public final class Register extends Operand {
         }
         return new Register(-1);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Register register = (Register) o;
+        return id == register.id;
+    }
 }

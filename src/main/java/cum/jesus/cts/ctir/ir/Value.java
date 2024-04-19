@@ -3,7 +3,7 @@ package cum.jesus.cts.ctir.ir;
 import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.ctir.Module;
-import cum.jesus.cts.type.Type;
+import cum.jesus.cts.ctir.type.Type;
 import cum.jesus.cts.util.Pair;
 
 import java.io.PrintStream;
@@ -16,6 +16,8 @@ public abstract class Value {
     protected Type type;
     protected Operand emittedValue;
 
+    public boolean prints = true;
+
     protected List<Pair<Integer, Boolean>> edges;
     public int color = -1;
     protected String register = "";
@@ -24,6 +26,10 @@ public abstract class Value {
         this.module = module;
         this.id = id;
         this.edges = new ArrayList<>();
+    }
+
+    public Module getModule() {
+        return module;
     }
 
     public Type getType() {

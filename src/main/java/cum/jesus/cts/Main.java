@@ -23,56 +23,60 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        File input = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.cts");
-        //File input = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\test.cts");
-
-        if (!input.canRead()) {
-            throw new IOException("Cannot read input file");
-        }
-
-        File graphout = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot");
-        //File graphout = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\ctir.dot");
-        if (graphout.exists()) {
-            graphout.delete();
-        }
-
-        graphout = null; // let the gc remove the file cuz we don't need it
-
         Type.init();
 
-        String text = new String(Files.readAllBytes(input.toPath()));
-        Lexer lexer = new Lexer(text);
-        List<Token> tokens = lexer.tokenize();
+        for (String arg : args) {
+            File input = new File(arg);
 
-        Environment globalScope = new Environment();
+            if (!input.canRead()) {
+                throw new IOException("Cannot read input file");
+            }
 
-        Parser parser = new Parser(tokens, globalScope);
-        AbstractSyntaxTree ast = parser.parse();
+            File graphout = new File("ctir.dot");
+            if (graphout.exists()) {
+                graphout.delete();
+            }
 
-        Module module = new Module(input.getName());
-        Builder builder = new Builder();
+            graphout = null; // let the gc remove the file cuz we don't need it
 
-        ast.print(System.out);
-        ast.emit(module, builder, globalScope);
+            String text = new String(Files.readAllBytes(input.toPath()));
+            Lexer lexer = new Lexer(text);
+            List<Token> tokens = lexer.tokenize();
 
-        module.print(System.out);
-        System.out.println();
-        module.optimize(OptimizationLevel.HIGH);
+            Environment globalScope = new Environment();
 
-        File output = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.ct");
-        //File output = new File("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\test.ct");
-        if (!output.exists()) {
-            output.createNewFile();
+            ErrorReporter errorReporter = new DefaultErrorReporter();
+            Parser parser = new Parser(arg, tokens, globalScope, errorReporter);
+            AbstractSyntaxTree ast = parser.parse();
+
+            errorReporter.spit();
+
+            Module module = new Module(input.getName());
+            Builder builder = new Builder();
+
+            ast.print(System.out);
+            ast.emit(module, builder, globalScope);
+
+            module.print(System.out);
+            System.out.println();
+            module.optimize(OptimizationLevel.HIGH);
+
+            File output = new File(arg.substring(0, arg.length() - 1));
+            if (!output.exists()) {
+                output.createNewFile();
+            }
+            if (!output.canWrite()) {
+                throw new IOException("Cannot write to output file");
+            }
+
+            module.emit(new FileOutputStream(output, false));
+
+            System.out.println();
         }
-        if (!output.canWrite()) {
-            throw new IOException("Cannot write to output file");
-        }
-
-        module.emit(new FileOutputStream(output, false));
     }
 
     private static void asm() throws IOException {
-        File input = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\test.ctasm");
+        File input = new File("test.ctasm");
         if (!input.canRead()) {
             throw new IOException("Cannot read input file");
         }
@@ -83,7 +87,7 @@ public class Main {
         cum.jesus.cts.asm.parsing.Parser parser = new cum.jesus.cts.asm.parsing.Parser(input.getName(), tokens, errorReporter);
 
         List<AsmValue> values = parser.parse();
-        OutputBuffer outputBuffer = new OutputBuffer();
+        OutputBuffer outputBuffer = new OutputBuffer(input.getName());
         OpcodeBuilder builder = new OpcodeBuilder(outputBuffer);
 
         for (AsmValue value : values) {
@@ -92,7 +96,7 @@ public class Main {
 
         builder.patchForwardLabels();
 
-        File output = new File("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Interpreter\\test.ct");
+        File output = new File("test.ct");
         if (!output.exists()) {
             output.createNewFile();
         }

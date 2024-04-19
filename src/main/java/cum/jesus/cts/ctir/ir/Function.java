@@ -14,10 +14,10 @@ import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.Module;
 import cum.jesus.cts.ctir.OptimizationLevel;
 import cum.jesus.cts.ctir.ir.instruction.AllocaInst;
-import cum.jesus.cts.ctir.ir.misc.SetStackOffset;
 import cum.jesus.cts.ctir.ir.misc.SaveStackOffset;
-import cum.jesus.cts.type.FunctionType;
-import cum.jesus.cts.type.Type;
+import cum.jesus.cts.ctir.ir.misc.SetStackOffset;
+import cum.jesus.cts.ctir.type.FunctionType;
+import cum.jesus.cts.ctir.type.Type;
 import cum.jesus.cts.util.Pair;
 
 import java.io.FileWriter;
@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.*;
 
-public class Function extends Value {
+public class Function extends Global {
     private String name;
     private List<Block> blocks;
     private List<Value> values;
@@ -35,7 +35,9 @@ public class Function extends Value {
     public int totalStackOffset = 0;
 
     private Function(FunctionType type, Module module, String name) {
-        super(module, module.getFunctions().size());
+        super(module);
+
+        id = module.getFunctions().size();
 
         this.name = name;
         this.blocks = new ArrayList<>();
@@ -47,11 +49,12 @@ public class Function extends Value {
         int[] argRegisters = { Register.regC, Register.regD, Register.regF, Register.regG};
 
         int i = 0;
-        for (Type argType : type.getArgs()) {
+        int stackArgs = -1;
+        for (Type argType : type.getArguments()) {
             int id = instructionCount++;
             Argument arg = new Argument(module, id, argType, String.valueOf(id));
             values.add(arg);
-            arg.color = argRegisters.length > i ? argRegisters[i++] : -1; // Argument assumes it's on stack if its register is -1
+            arg.color = (argRegisters.length > i) ? argRegisters[i++] : stackArgs--; // Argument assumes it's on stack if its register is negative
             args.add(id);
         }
     }
@@ -76,6 +79,14 @@ public class Function extends Value {
 
     public List<Block> getBlocks() {
         return blocks;
+    }
+
+    public List<Argument> getArgs() {
+        List<Argument> res = new ArrayList<>(args.size());
+        for (int i = 0; i < args.size(); i++) {
+            res.add(getArgument(i));
+        }
+        return res;
     }
 
     public Value getValue(int index) {
@@ -150,12 +161,14 @@ public class Function extends Value {
 
     @Override
     public String ident() {
-        return String.format("@%s", name);
+        return String.format("%s@%s", module.getName(), name);
     }
 
     @Override
     public void emit(List<AsmValue> values) {
         if (blocks.isEmpty()) {
+            values.add(new ConstantPoolFake(new FakeFunctionHandleOperand(name)));
+            emittedValue = new ConstPoolEntryOperand(module.constPoolOffset++);
             return;
         }
 
@@ -183,6 +196,7 @@ public class Function extends Value {
         }
     }
 
+    @Override
     public void optimize(OptimizationLevel level) {
         allocateRegisters();
         sortAllocas();
@@ -288,10 +302,10 @@ public class Function extends Value {
         final int k = 8;
 
         int count = allNodes.size();
+        int iterations = 0;
         while (count != 0) {
-            for (int i = 0; i < allNodes.size(); i++) {
-                Pair<Integer, Boolean> it = allNodes.get(i);
-
+            iterations++;
+            for (Pair<Integer, Boolean> it : allNodes) {
                 if (it.second && values.get(it.first).edges.size() < k) {
                     stack.push(it.first);
                     for (Pair<Integer, Boolean> node : allNodes) {
@@ -307,6 +321,10 @@ public class Function extends Value {
                     count -= 1;
                 }
             }
+
+            if (iterations >= 10000) {
+                break; // tmp
+            }
         }
 
         final String[] registers = {
@@ -320,7 +338,9 @@ public class Function extends Value {
                 "cyan", "magenta"
         };
 
-        try (FileWriter graphout = new FileWriter("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot", true)) {
+        //try (FileWriter graphout = new FileWriter("C:\\Users\\JesusTouchMe\\IdeaProjects\\CTS-Compiler\\ctir.dot", true)) {
+        //try (FileWriter graphout = new FileWriter("C:\\Users\\Jannik\\IdeaProjects\\CheatTriggersCompiler\\ctir.dot", true)) {
+        try (FileWriter graphout = new FileWriter("ctir.dot", true)) {
             graphout.write("\n\nstrict graph {");
 
             while (!stack.empty()) {
@@ -330,7 +350,7 @@ public class Function extends Value {
                     graphout.write("\n\tN" + id + " -- N" + edge.first);
                 }
 
-                int color = values.get(id).color;
+                int color = (values.get(id).color < 0) ? -1 : values.get(id).color;
                 if (color == -1) {
                     color = 1; // 0 is special ed prefix buffer, start with 1 :D
                     while (color < k) {
@@ -342,7 +362,9 @@ public class Function extends Value {
                         }
                         color++;
                     }
-                    values.get(id).color = color;
+                    if (!(values.get(id) instanceof Argument)) {
+                        values.get(id).color = color;
+                    }
                 }
                 values.get(id).register = registers[color - 1];
 
@@ -359,7 +381,7 @@ public class Function extends Value {
 
         for (Block block : blocks) {
             for (int instruction : block.getInstructions()) {
-                if (values.get(instruction) instanceof AllocaInst | values.get(instruction) instanceof SaveStackOffset || values.get(instruction) instanceof SetStackOffset) {
+                if (values.get(instruction) instanceof AllocaInst || values.get(instruction) instanceof SaveStackOffset || values.get(instruction) instanceof SetStackOffset) {
                     temp.add(values.get(instruction));
                 }
             }
@@ -373,13 +395,12 @@ public class Function extends Value {
         for (Value alloca : temp) {
             if (alloca instanceof SaveStackOffset) {
                 savedOffset.push(offset);
-                maxOffset = Math.max(maxOffset, offset);
             } else if (alloca instanceof SetStackOffset) {
-                maxOffset = Math.max(maxOffset, offset);
                 offset = savedOffset.pop();
             } else {
-                offset += 1; // an alloca is 1 value aka 1 size cuz vm works in values not bytes
-                ((AllocaInst) alloca).setStackOffset(allocaSignature, (short) offset);
+                ((AllocaInst) alloca).setStackOffset(allocaSignature, (short) (offset + 1));
+                offset += ((AllocaInst) alloca).getAllocatedType().getSize();
+                maxOffset = Math.max(maxOffset, offset);
             }
         }
 

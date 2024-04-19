@@ -4,7 +4,6 @@ import cum.jesus.cts.asm.instruction.AsmValue;
 import cum.jesus.cts.asm.instruction.Label;
 import cum.jesus.cts.asm.instruction.Operand;
 import cum.jesus.cts.asm.instruction.operand.LabelOperand;
-import cum.jesus.cts.ctir.ir.instruction.BinOpInst;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -79,10 +78,15 @@ public final class Block extends Value {
     @Override
     public void print(PrintStream stream) {
         stream.printf("  %s:\n", name);
+        boolean previousPrinted = true;
         for (int instruction : values) {
-            stream.print("    ");
+            if (previousPrinted) {
+                stream.print("    ");
+            }
             parent.getValue(instruction).print(stream);
-            stream.println();
+            if (previousPrinted = parent.getValue(instruction).prints) {
+                stream.println();
+            }
         }
     }
 
@@ -104,15 +108,8 @@ public final class Block extends Value {
     }
 
     public void optimizeLow() {
-        for (int value : values) {
-            if (parent.getValue(value) instanceof BinOpInst) {
-                BinOpInst binOpInst = (BinOpInst) parent.getValue(value);
-                BinOpInst tmp = new BinOpInst(this, value, parent.getValue(binOpInst.getLeft()), BinOpInst.Operator.SUB, parent.getValue(binOpInst.getRight()), String.valueOf(value));
-                tmp.color = binOpInst.color;
-                tmp.register = binOpInst.register;
-                tmp.edges = binOpInst.edges;
-                parent.setValue(value, tmp);
-            }
+        for (Iterator<Integer> it = values.iterator(); it.hasNext(); ) {
+            int value = it.next();
         }
     }
 

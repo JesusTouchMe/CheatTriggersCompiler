@@ -13,7 +13,8 @@ public final class CompoundStatement extends AstNode {
     private List<AstNode> body;
     private Environment scope;
 
-    public CompoundStatement(List<AstNode> body, Environment scope) {
+    public CompoundStatement(List<String> annotations, List<AstNode> body, Environment scope) {
+        super(annotations);
         this.body = body;
         this.scope = scope;
     }

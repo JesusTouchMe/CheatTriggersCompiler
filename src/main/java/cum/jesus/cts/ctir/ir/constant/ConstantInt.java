@@ -5,7 +5,7 @@ import cum.jesus.cts.asm.instruction.operand.Immediate;
 import cum.jesus.cts.asm.instruction.operand.Register;
 import cum.jesus.cts.asm.instruction.twooperandinstruction.MovInstruction;
 import cum.jesus.cts.ctir.ir.Block;
-import cum.jesus.cts.type.Type;
+import cum.jesus.cts.ctir.type.Type;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -13,15 +13,12 @@ import java.util.List;
 
 public final class ConstantInt extends Constant {
     private final long value;
-    private final String name;
 
-    public ConstantInt(Block parent, int id, long value, Type type, String name) {
-        super(parent.getParent().getModule(), id);
+    public ConstantInt(Block parent, int id, long value, Type type) {
+        super(parent, id);
+        super.type = type;
 
         this.value = value;
-        this.name = name;
-
-        super.type = type;
     }
 
     public long getValue() {
@@ -40,12 +37,12 @@ public final class ConstantInt extends Constant {
 
     @Override
     public void print(PrintStream stream) {
-        stream.printf("%%%s = %s %d", name, type.getName(), value);
+        prints = false;
     }
 
     @Override
     public String ident() {
-        return String.format("%s %%%s", type.getName(), name);
+        return String.format("%s %d", type.getName(), value);
     }
 
     @Override
